@@ -16,6 +16,7 @@ import (
 	math_rand "math/rand"
 	"reflect"
 	
+	
 )
 
 type user struct {
@@ -170,6 +171,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 					fmt.Fprintf(w, "game is already running")
 					return
 				}
+				log.Debug("loading game.. :",bodyString[2])
 				var loadGame game
 				selfServer.db.Preload("Characters").Preload("GameField").First(&loadGame, "id = ?", bodyString[2])
 				selfServer.game = &loadGame
