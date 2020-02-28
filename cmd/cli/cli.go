@@ -8,6 +8,7 @@ import (
 		 "net/http/cookiejar"
 		"os"
 		"net/url"
+		"encoding/json"
 )
 
 type clientCli struct {
@@ -21,14 +22,16 @@ type clientCli struct {
 
 func completer(d prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
-		{Text: "login"},
-		{Text: "user new"},
-		{Text: "char new"},
-		{Text: "char stats"},
-		{Text: "load game"},
+		{Text: "login",Description: "login <username>: for authentication"}, 						//working
+		{Text: "user new",Description: "user new <username>: creates new user for the server"},		//working
+		{Text: "char new",Description: "char new <CharacterName> <gameID>: creates new Character"},	//working
+		{Text: "char list"},
+		{Text: "game load",Description: "game load <gameID>: loads game into server"},				//working
 		{Text: "game start"},
-		{Text: "game new"},
-		{Text: "quit"},
+		{Text: "game join",Description: "game join: joins game"},
+		{Text: "game new",Description: "game new <gameName>: creates new game"},					//working
+		{Text: "game list",Description: "game list: shows all games on server"},					//working
+		{Text: "quit"},																				//working
 	}
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 }
@@ -47,16 +50,15 @@ func (selfclientCli *clientCli)login(username string) {
 	
 }
 
-func (selfclientCli *clientCli)sendCommand(command string ) {
+func (selfclientCli *clientCli)sendCommand(command string ) string {
 	
 	data := []byte(command)
 	response, err := gogam.PostRequest(selfclientCli.url+"game",data,selfclientCli.jar)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(response)
+	return response
 }
-
 
 func executor(in string) {
 
@@ -78,8 +80,22 @@ func executor(in string) {
 				clientObject.sendCommand(in)
 			}
 		case "game":
-			if command[1] == "new" {
+			if command[1] == "join" {
 				clientObject.sendCommand(in)
+			}
+			if command[1] == "load" {
+				clientObject.sendCommand(in)
+			}
+						if command[1] == "new" {
+				clientObject.sendCommand(in)
+			}
+			if command[1] == "list" {
+				jsonString := clientObject.sendCommand(in)
+				var gameNameArray []string
+				json.Unmarshal([]byte(jsonString),&gameNameArray)
+				for cnt,gameName := range gameNameArray {
+					fmt.Println(cnt,": ",gameName)
+				}
 			}
 		case "ls":
 			fmt.Println(clientObject.url)
@@ -90,6 +106,13 @@ func executor(in string) {
 				}
 			fmt.Println(clientObject.jar.Cookies(baseURL))
 			fmt.Println(clientObject.username)
+		case "char":
+			if command[1] == "new" {
+				clientObject.sendCommand(in)
+			}
+			if command[1] == "stats" {
+				clientObject.sendCommand(in)
+			}
 		case "":
 		default:
 			fmt.Println("unknown command")
@@ -98,6 +121,8 @@ func executor(in string) {
 }
 
 var promtPrefix string
+var gameID int
+var characterName string
 var clientObject *clientCli
 func livePrefix() (string, bool) {
 	return promtPrefix + "> ", true
@@ -106,7 +131,7 @@ func livePrefix() (string, bool) {
 
 func main() {
 
-		fmt.Println("preload")
+	//fmt.Println("preload")
 	promtPrefix = ""
 	clientObject = new(clientCli)
 	
@@ -116,7 +141,21 @@ func main() {
 	}
 	clientObject.jar = jar
 	clientObject.url = "http://localhost:7070/"
-	fmt.Println("preload finished")
+	//fmt.Println("preload finished")
+
+	//login
+	clientObject.login("admin")
+	//create new game
+	clientObject.sendCommand("game new welt1")
+	//load new game
+	clientObject.sendCommand("game load 0")
+	//new character
+	clientObject.sendCommand("char new char1 0")
+	//join game
+	clientObject.sendCommand("char new char1 0")
+
+
+/*
 	
 	p := prompt.New(
 		executor,
@@ -132,7 +171,7 @@ func main() {
 	p.Run()
 
 
-/*
+
 	login
 	game -> new
 	gmae -> load
@@ -140,6 +179,12 @@ func main() {
 	action -> view env
 	action -> interact
 	action -> move -> 
+
+	game status
+	- character info
+	- map
+
+	login -> game new -> game load -> game join
 
 
 	*/

@@ -1,63 +1,64 @@
 package gogam
 
 import (
-	"log"
 	"bytes"
 	 "io/ioutil"
 	 "net/http"
 	 "os"
 	 "bufio"
+	 log "github.com/sirupsen/logrus"
 	 //"fmt"
- 	"net/http/cookiejar"
+	 "net/http/cookiejar"
+	 "encoding/json"
 )
 
 //PostRequest sds
 func PostJSONRequest(url string, bytedata []byte) (string,error) {
 
-	log.Println("PostRequest: trying post request to: ", url)
+	log.Debug("PostRequest: trying post request to: ", url)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(bytedata))
 	if err != nil {
-		log.Println(err)
+		log.Debug(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println(err)
+		log.Debug(err)
 		return "",err
 	}
 	//defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
+		log.Debug(err)
 	}
 	resp.Body.Close()
-	log.Println("response Body:", string(body))
+	log.Debug("response Body:", string(body))
 
 	return string(body),nil
 }
 func PostRequest(url string, bytedata []byte, jar *cookiejar.Jar) (string,error) {
 
-	log.Println("PostRequest: trying post request to: ", url)
+	log.Debug("PostRequest: trying post request to: ", url)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(bytedata))
 	if err != nil {
-		log.Println(err)
+		log.Debug(err)
 	}
 	//req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{Jar: jar}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println(err)
+		log.Debug(err)
 		return "",err
 	}
 	//defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
+		log.Debug(err)
 	}
 	resp.Body.Close()
-	log.Println("response Body:", string(body))
+	log.Debug("response Body:", string(body))
 
 	return string(body),nil
 }
@@ -66,7 +67,7 @@ func BoardParser() *gameField{
 
 	file , err := os.Open("map.mp")
 	if err != nil {
-		log.Println(err)
+		log.Debug(err)
 	}
 	defer file.Close()
 
@@ -82,10 +83,10 @@ func BoardParser() *gameField{
 		for x,character := range scanner.Text() {
 
 			tempTile := &tile{
-				movable: false,
-				interactable: false,
-				info: "Default",
-				asciArt: character,
+				Movable: false,
+				Interactable: false,
+				Info: "Default",
+				AsciArt: character,
 
 			}
 			tempTile.initTile()
@@ -97,17 +98,28 @@ func BoardParser() *gameField{
 		board = append(board,tem)
 		rowCnt++
 
-		//log.Println(scanner.Text())
+		//log.Debug(scanner.Text())
 	}
-	log.Println("Rows from File:",rowCnt)
-	log.Println("Startpoints at: ")
+	log.Debug("Rows from File:",rowCnt)
+	log.Debug("Startpoints at: ")
 	for num,poi := range startPoints {
-		log.Println("StartPoint ",num,": ",poi.X,":",poi.Y)
+		log.Debug("StartPoint ",num,": ",poi.X,":",poi.Y)
 	}
 	return &gameField {
 		Field:&board,
 		startPoints: startPoints,
 	}
+
+}
+
+func toJSON(thingy interface{}) string {
+
+	byteArray ,err := json.Marshal(thingy)
+	if err != nil {
+		log.Debug(err)
+	}
+	return string(byteArray)
+
 
 }
 

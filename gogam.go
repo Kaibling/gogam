@@ -2,7 +2,7 @@ package gogam
 
 import (
     "fmt"
-    "log"
+    log "github.com/sirupsen/logrus"
     "math"
   	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -10,33 +10,34 @@ import (
 	"encoding/json"
 )
 
+
 type tile struct {
-	movable bool
-	interactable bool
-	info	string
-	asciArt rune
+	Movable bool
+	Interactable bool
+	Info	string
+	AsciArt rune
 }
 
 func (selfTile *tile) initTile() {
 
-	switch selfTile.asciArt {
+	switch selfTile.AsciArt {
 		case '=':
 			//Wall
-			selfTile.info ="There is a Wall"
+			selfTile.Info ="There is a Wall"
 		case 'S':
 			//Startpoint
-			selfTile.info ="Only the Floor"
-			selfTile.movable = true
+			selfTile.Info ="Only the Floor"
+			selfTile.Movable = true
 		case ' ':
 			//Floor
-			selfTile.info ="Only the Floor"
-			selfTile.movable = true
+			selfTile.Info ="Only the Floor"
+			selfTile.Movable = true
 		
 		case 'D':
 			//Door
-			selfTile.info ="It's ... a Door"
-			selfTile.movable = true
-			selfTile.interactable = true
+			selfTile.Info ="It's ... a Door"
+			selfTile.Movable = true
+			selfTile.Interactable = true
 	}
 }
 
@@ -48,7 +49,7 @@ type gameField struct {
 func (selfGameField *gameField) ShowMap() {
 	for _,row := range *selfGameField.Field {
 		for _,tilchen := range row {
-			fmt.Print(string(tilchen.asciArt))
+			fmt.Print(string(tilchen.AsciArt))
 		}
 		fmt.Println()
 	}
@@ -72,9 +73,10 @@ type position struct {
 
 type game struct {
 	gorm.Model			
-	Characters []*character	`gorm:"many2many:game_player;association_jointable_foreignkey:CharacterID"`
-	Name	string
-	GameField *gameField
+	Characters 	[]*character	`gorm:"many2many:game_character;association_jointable_foreignkey:character_id"`
+	Name		string
+	GameField 	*gameField
+	InProgress	bool
 }
 
 func (selfGame *game) characterOverview() {
@@ -96,17 +98,16 @@ func (selfGame *game) addCharacter(character *character) {
 
 type character struct {
 	gorm.Model
-	CharacterID int
-	Name string
-    Level int
-    Health int
-    MaxHealth int
-	Experience int
-	Position position
-	Passives []*passive `gorm:"many2many:user_passive;association_jointable_foreignkey:passive_id"`
-	Skills []*skill		`gorm:"many2many:user_skill;"`
-	//Passives []*Passive `gorm:"many2many:user_passive;"`
-	//Skills []*Skill		`gorm:"many2many:user_skill;"`
+	Name 		string
+    Level 		int
+    Health 		int
+    MaxHealth 	int
+	Experience 	int
+	Position 	position
+	Game		*game			`gorm:"many2many:game_character;association_jointable_foreignkey:game_id"`
+	User 		*user	 		`gorm:"many2many:user_character;association_jointable_foreignkey:user_id"`
+	Passives 	[]*passive 		`gorm:"many2many:character_passive;association_jointable_foreignkey:passive_id"`
+	Skills 		[]*skill		`gorm:"many2many:character_skill;association_jointable_foreignkey:skill_id"`
 }
 
 func (selfCharacter *character) getReduction() int {
@@ -120,14 +121,14 @@ func (selfCharacter *character) getReduction() int {
 
 type skill struct {
 	gorm.Model
-    SkillID int			//`gorm:"foreignkey"`
+    //SkillID int			`gorm:"foreignkey"`
     SkillType string
 	BaseDamage int
 }
 
 type passive struct {
 	gorm.Model
-    PassiveID int		`gorm:"foreignkey"`
+    //PassiveID int		`gorm:"foreignkey"`
 	PassiveType string
 	DamageReduction int
 	DamageIncrease int
@@ -150,11 +151,6 @@ func attack(attacker *character,attackID int,defender *character) {
     defender.Health -= int(damage)
     log.Println("defender health: ",defender.Health )
 }
-
-
-
-
-
 
 
 //classTypes := []string{"dark","light"}
@@ -282,6 +278,23 @@ func main() {
 	stats -> shows own stats
 
 
+
+					pass1 :=&passive {
+					//PassiveID: 3,
+					PassiveType: "dark",
+					DamageReduction: 13,
+				}
+				//selfServer.db.Create(&pass1)
+
+				skill1 :=&skill {
+				//SkillID: 1,
+				SkillType: "dark",
+				BaseDamage: 4,
+				}
+				//selfServer.db.Create(skill1)
+
+				newChar.Passives = append(newChar.Passives,pass1)
+				newChar.Skills = append(newChar.Skills,skill1)
 
 
 
