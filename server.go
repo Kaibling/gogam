@@ -246,7 +246,15 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			minHealth := 35
 			health := math_rand.Intn(maxHealth - minHealth)
 			var loadGame game
-			selfServer.db.First(&loadGame, "id = ?", gameID)
+			var loadGameCheck game
+			loadGameCheck = loadGame
+			selfServer.db.Find(&loadGame, "id = ?", gameID)
+			if reflect.DeepEqual(loadGame, loadGameCheck) {
+				log.Debug("game id not found:", gameID)
+				fmt.Fprintf(w, "game id not found")
+				return
+			}
+			log.Info(toJSON(loadGame))
 
 			newChar := &character{
 				Name:       characterName,

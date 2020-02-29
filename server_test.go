@@ -14,8 +14,7 @@ import (
 )
 
 /*
-		{Text: "char new",Description: "char new <CharacterName> <gameID>: creates new Character"},	//working
-		{Text: "char list"},
+
 		{Text: "game start"},
 		{Text: "game join",Description: "game join: joins game"},
 */
@@ -204,12 +203,6 @@ func TestUserNewauthenticated(t *testing.T) {
 	os.Remove("gogam.db")
 }
 
-
-//		{Text: "game list",Description: "game list: shows all games on server"},					//working
-
-
-//nogames
-//twogames
 func TestGameListNoExistingGames(t *testing.T) {
 	//log.SetLevel(log.DebugLevel)
 	//test game list
@@ -233,7 +226,7 @@ func TestGameListNoExistingGames(t *testing.T) {
 }
 
 func TestGameListTwoGames(t *testing.T) {
-	//log.SetLevel(log.DebugLevel)
+
 	//test game list
 	res := httptest.NewRecorder()
 	testServer := new(Server)
@@ -252,6 +245,82 @@ func TestGameListTwoGames(t *testing.T) {
 	if reflect.DeepEqual(contentStrngArray,expected) {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
 	}
-	//os.Remove("gogam.db")
-	//log.SetLevel(log.InfoLevel)
+	os.Remove("gogam.db")
+
+}
+
+func TestCharNewWithoutGame(t *testing.T) {
+
+	//char new char1 0
+	res := httptest.NewRecorder()
+	testServer := new(Server)
+	testServer.initiateServer()
+
+	postRequestLoginHandler("admin","/login",testServer,res)
+
+	content, _ := postRequestGameHandler("char new char1 1","/game",testServer,res)
+	expected := "game id not found"
+
+	if string(content) != expected {
+		t.Errorf("Expected %s, got %s.", expected, string(content))
+	}
+	os.Remove("gogam.db")
+
+}
+
+func TestCharNewwithExistingGame(t *testing.T) {
+	//char new char1 0
+	res := httptest.NewRecorder()
+	testServer := new(Server)
+	testServer.initiateServer()
+
+	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestGameHandler("game new world1","/game",testServer,res)
+
+	content, _ := postRequestGameHandler("char new char1 1","/game",testServer,res)
+	expected := "OK"
+
+	if string(content) != expected {
+		t.Errorf("Expected %s, got %s.", expected, string(content))
+	}
+	os.Remove("gogam.db")
+
+}
+
+func TestCharListWithoutExistingChar(t *testing.T) {
+	//char new char1 0
+	res := httptest.NewRecorder()
+	testServer := new(Server)
+	testServer.initiateServer()
+
+	postRequestLoginHandler("admin","/login",testServer,res)
+	content, _ := postRequestGameHandler("char list","/game",testServer,res)
+	expected := []string{}
+	contentStrngArray := strings.Split(string(content)," ")
+	
+	if reflect.DeepEqual(contentStrngArray,expected) {
+		t.Errorf("Expected %s, got %s.", expected, string(content))
+	}
+	os.Remove("gogam.db")
+
+}
+
+func TestCharListWithExistingChar(t *testing.T) {
+	//char new char1 0
+	res := httptest.NewRecorder()
+	testServer := new(Server)
+	testServer.initiateServer()
+
+	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestGameHandler("game new world1","/game",testServer,res)
+	postRequestGameHandler("char new char1 1","/game",testServer,res)
+	content, _ := postRequestGameHandler("char list","/game",testServer,res)
+	expected := []string{"chari"}
+	contentStrngArray := strings.Split(string(content)," ")
+	
+	if reflect.DeepEqual(contentStrngArray,expected) {
+		t.Errorf("Expected %s, got %s.", expected, string(content))
+	}
+	os.Remove("gogam.db")
+
 }
