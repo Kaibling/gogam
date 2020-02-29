@@ -14,9 +14,11 @@ import (
 )
 
 /*
-
 	{Text: "game start"},
 */
+
+var testCommandNewGame = "game new"
+var testCommandGameLoad = "game load"
 
 func postRequestGameHandler(command string, testServer *Server, res *httptest.ResponseRecorder) ([]byte, error) {
 	a := bytes.NewBuffer([]byte(command))
@@ -72,7 +74,7 @@ func TestNewGameUnautheticated(t *testing.T) {
 	testServer.initiateServer()
 
 	//test game new (unauthenticated)
-	content, _ := postRequestGameHandler("game load 1", testServer, res)
+	content, _ := postRequestGameHandler(testCommandGameLoad+" 1", testServer, res)
 	expected := "ynogo"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -87,7 +89,7 @@ func TestNewGameautheticatednoGameID(t *testing.T) {
 
 	postRequestLoginHandler("admin", testServer, res)
 
-	content, _ := postRequestGameHandler("game new", testServer, res)
+	content, _ := postRequestGameHandler(testCommandNewGame, testServer, res)
 	expected := "not enough arguments"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -103,7 +105,7 @@ func TestNewGameautheticatednewGame(t *testing.T) {
 
 	postRequestLoginHandler("admin", testServer, res)
 
-	content, _ := postRequestGameHandler("game new world1", testServer, res)
+	content, _ := postRequestGameHandler(testCommandNewGame+" world1", testServer, res)
 	expected := "OK"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -112,9 +114,8 @@ func TestNewGameautheticatednewGame(t *testing.T) {
 }
 
 func TestGameLoadNonExistingGame(t *testing.T) {
-	//os.Remove("gogam.db")
+
 	//test game new world1
-	//log.SetLevel(log.DebugLevel)
 	res := httptest.NewRecorder()
 	testServer := new(Server)
 	testServer.initiateServer()
@@ -122,8 +123,7 @@ func TestGameLoadNonExistingGame(t *testing.T) {
 	//login/get session
 	postRequestLoginHandler("admin", testServer, res)
 	//load game without create
-	//postRequestGameHandler("game load 1","/game",testServer,res)
-	content, _ := postRequestGameHandler("game load 2", testServer, res)
+	content, _ := postRequestGameHandler(testCommandGameLoad+" 2", testServer, res)
 	expected := "game id not found"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -140,8 +140,8 @@ func TestGameLoadExistingGame(t *testing.T) {
 
 	postRequestLoginHandler("admin", testServer, res)
 
-	postRequestGameHandler("game new world1", testServer, res)
-	content, _ := postRequestGameHandler("game load 1", testServer, res)
+	postRequestGameHandler(testCommandNewGame+" world1", testServer, res)
+	content, _ := postRequestGameHandler(testCommandGameLoad+" 1", testServer, res)
 	expected := "game successful loaded"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -158,9 +158,9 @@ func TestGameLoadExistingGameTwice(t *testing.T) {
 
 	postRequestLoginHandler("admin", testServer, res)
 
-	postRequestGameHandler("game new world1", testServer, res)
-	postRequestGameHandler("game load 1", testServer, res)
-	content, _ := postRequestGameHandler("game load 1", testServer, res)
+	postRequestGameHandler(testCommandNewGame+" world1", testServer, res)
+	postRequestGameHandler(testCommandGameLoad+" 1", testServer, res)
+	content, _ := postRequestGameHandler(testCommandGameLoad+" 1", testServer, res)
 	expected := "game already loaded"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -230,8 +230,8 @@ func TestGameListTwoGames(t *testing.T) {
 
 	postRequestLoginHandler("admin", testServer, res)
 
-	postRequestGameHandler("game new world1", testServer, res)
-	postRequestGameHandler("game new world2", testServer, res)
+	postRequestGameHandler(testCommandNewGame+" world1", testServer, res)
+	postRequestGameHandler(testCommandNewGame+" world2", testServer, res)
 
 	content, _ := postRequestGameHandler("game list", testServer, res)
 	expected := []string{"world1", "world2"}
@@ -271,7 +271,7 @@ func TestCharNewwithExistingGame(t *testing.T) {
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
-	postRequestGameHandler("game new world1", testServer, res)
+	postRequestGameHandler(testCommandNewGame+" world1", testServer, res)
 
 	content, _ := postRequestGameHandler("char new char1 1", testServer, res)
 	expected := "OK"
@@ -308,7 +308,7 @@ func TestCharListWithExistingChar(t *testing.T) {
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
-	postRequestGameHandler("game new world1", testServer, res)
+	postRequestGameHandler(testCommandNewGame+" world1", testServer, res)
 	postRequestGameHandler("char new char1 1", testServer, res)
 	content, _ := postRequestGameHandler("char list", testServer, res)
 	expected := []string{"char1"}
@@ -328,7 +328,7 @@ func TestGameJoinNonloadedGame(t *testing.T) {
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
-	postRequestGameHandler("game new world1", testServer, res)
+	postRequestGameHandler(testCommandNewGame+" world1", testServer, res)
 	postRequestGameHandler("char new char1 1", testServer, res)
 	content, _ := postRequestGameHandler("game join", testServer, res)
 	expected := "no game loaded"
@@ -347,9 +347,9 @@ func TestGameJoinLoadedGame(t *testing.T) {
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
-	postRequestGameHandler("game new world1", testServer, res)
+	postRequestGameHandler(testCommandNewGame+" world1", testServer, res)
 	postRequestGameHandler("char new char1 1", testServer, res)
-	postRequestGameHandler("game load 1", testServer, res)
+	postRequestGameHandler(testCommandGameLoad+" 1", testServer, res)
 	content, _ := postRequestGameHandler("game join", testServer, res)
 	expected := "OK"
 
@@ -367,8 +367,8 @@ func TestGameJoinLoadedGameWithoutChar(t *testing.T) {
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
-	postRequestGameHandler("game new world1", testServer, res)
-	postRequestGameHandler("game load 1", testServer, res)
+	postRequestGameHandler(testCommandNewGame+" world1", testServer, res)
+	postRequestGameHandler(testCommandGameLoad+" 1", testServer, res)
 	content, _ := postRequestGameHandler("game join", testServer, res)
 	expected := "no character for this game"
 
@@ -386,10 +386,10 @@ func TestGameJoinLoadedGameWithWrongChar(t *testing.T) {
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
-	postRequestGameHandler("game new world1", testServer, res)
-	postRequestGameHandler("game new world2", testServer, res)
+	postRequestGameHandler(testCommandNewGame+" world1", testServer, res)
+	postRequestGameHandler(testCommandNewGame+" world2", testServer, res)
 	postRequestGameHandler("char new char1 1", testServer, res)
-	postRequestGameHandler("game load 2", testServer, res)
+	postRequestGameHandler(testCommandGameLoad+" 2", testServer, res)
 	content, _ := postRequestGameHandler("game join", testServer, res)
 	expected := "no character for this world"
 
