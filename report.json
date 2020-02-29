@@ -1,0 +1,94 @@
+{"Time":"2020-02-29T23:41:53.947822417Z","Action":"run","Package":"_/workspace/gogam","Test":"TestLoginFailing"}
+{"Time":"2020-02-29T23:41:53.948186711Z","Action":"output","Package":"_/workspace/gogam","Test":"TestLoginFailing","Output":"=== RUN   TestLoginFailing\n"}
+{"Time":"2020-02-29T23:41:53.977023161Z","Action":"output","Package":"_/workspace/gogam","Test":"TestLoginFailing","Output":"--- PASS: TestLoginFailing (0.03s)\n"}
+{"Time":"2020-02-29T23:41:53.97707609Z","Action":"pass","Package":"_/workspace/gogam","Test":"TestLoginFailing","Elapsed":0.03}
+{"Time":"2020-02-29T23:41:53.977091878Z","Action":"run","Package":"_/workspace/gogam","Test":"TestLoginSuccess"}
+{"Time":"2020-02-29T23:41:53.977356701Z","Action":"output","Package":"_/workspace/gogam","Test":"TestLoginSuccess","Output":"=== RUN   TestLoginSuccess\n"}
+{"Time":"2020-02-29T23:41:54.313153098Z","Action":"output","Package":"_/workspace/gogam","Test":"TestLoginSuccess","Output":"--- PASS: TestLoginSuccess (0.34s)\n"}
+{"Time":"2020-02-29T23:41:54.313240924Z","Action":"pass","Package":"_/workspace/gogam","Test":"TestLoginSuccess","Elapsed":0.34}
+{"Time":"2020-02-29T23:41:54.313256138Z","Action":"run","Package":"_/workspace/gogam","Test":"TestNewGameUnautheticated"}
+{"Time":"2020-02-29T23:41:54.313265178Z","Action":"output","Package":"_/workspace/gogam","Test":"TestNewGameUnautheticated","Output":"=== RUN   TestNewGameUnautheticated\n"}
+{"Time":"2020-02-29T23:41:54.622547697Z","Action":"output","Package":"_/workspace/gogam","Test":"TestNewGameUnautheticated","Output":"--- PASS: TestNewGameUnautheticated (0.31s)\n"}
+{"Time":"2020-02-29T23:41:54.622611231Z","Action":"pass","Package":"_/workspace/gogam","Test":"TestNewGameUnautheticated","Elapsed":0.31}
+{"Time":"2020-02-29T23:41:54.622626514Z","Action":"run","Package":"_/workspace/gogam","Test":"TestNewGameautheticatednoGameID"}
+{"Time":"2020-02-29T23:41:54.622635271Z","Action":"output","Package":"_/workspace/gogam","Test":"TestNewGameautheticatednoGameID","Output":"=== RUN   TestNewGameautheticatednoGameID\n"}
+{"Time":"2020-02-29T23:41:54.911401831Z","Action":"output","Package":"_/workspace/gogam","Test":"TestNewGameautheticatednoGameID","Output":"--- PASS: TestNewGameautheticatednoGameID (0.29s)\n"}
+{"Time":"2020-02-29T23:41:54.911515804Z","Action":"pass","Package":"_/workspace/gogam","Test":"TestNewGameautheticatednoGameID","Elapsed":0.29}
+{"Time":"2020-02-29T23:41:54.911537342Z","Action":"run","Package":"_/workspace/gogam","Test":"TestNewGameautheticatednewGame"}
+{"Time":"2020-02-29T23:41:54.911547371Z","Action":"output","Package":"_/workspace/gogam","Test":"TestNewGameautheticatednewGame","Output":"=== RUN   TestNewGameautheticatednewGame\n"}
+{"Time":"2020-02-29T23:41:55.194184329Z","Action":"output","Package":"_/workspace/gogam","Test":"TestNewGameautheticatednewGame","Output":"--- PASS: TestNewGameautheticatednewGame (0.28s)\n"}
+{"Time":"2020-02-29T23:41:55.194273207Z","Action":"pass","Package":"_/workspace/gogam","Test":"TestNewGameautheticatednewGame","Elapsed":0.28}
+{"Time":"2020-02-29T23:41:55.19430121Z","Action":"run","Package":"_/workspace/gogam","Test":"TestGameLoadNonExistingGame"}
+{"Time":"2020-02-29T23:41:55.194315427Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameLoadNonExistingGame","Output":"=== RUN   TestGameLoadNonExistingGame\n"}
+{"Time":"2020-02-29T23:41:55.486605974Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameLoadNonExistingGame","Output":"--- FAIL: TestGameLoadNonExistingGame (0.29s)\n"}
+{"Time":"2020-02-29T23:41:55.486680581Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameLoadNonExistingGame","Output":"    server_test.go:129: Expected game id not found, got game not found.\n"}
+{"Time":"2020-02-29T23:41:55.486704172Z","Action":"fail","Package":"_/workspace/gogam","Test":"TestGameLoadNonExistingGame","Elapsed":0.29}
+{"Time":"2020-02-29T23:41:55.486723156Z","Action":"run","Package":"_/workspace/gogam","Test":"TestGameLoadExistingGame"}
+{"Time":"2020-02-29T23:41:55.486736917Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameLoadExistingGame","Output":"=== RUN   TestGameLoadExistingGame\n"}
+{"Time":"2020-02-29T23:41:55.805302965Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameLoadExistingGame","Output":"--- FAIL: TestGameLoadExistingGame (0.32s)\n"}
+{"Time":"2020-02-29T23:41:55.805371919Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameLoadExistingGame","Output":"    server_test.go:147: Expected game successful loaded, got game loaded.\n"}
+{"Time":"2020-02-29T23:41:55.805410151Z","Action":"fail","Package":"_/workspace/gogam","Test":"TestGameLoadExistingGame","Elapsed":0.32}
+{"Time":"2020-02-29T23:41:55.80543288Z","Action":"run","Package":"_/workspace/gogam","Test":"TestGameLoadExistingGameTwice"}
+{"Time":"2020-02-29T23:41:55.805446062Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameLoadExistingGameTwice","Output":"=== RUN   TestGameLoadExistingGameTwice\n"}
+{"Time":"2020-02-29T23:41:56.10447409Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameLoadExistingGameTwice","Output":"--- FAIL: TestGameLoadExistingGameTwice (0.30s)\n"}
+{"Time":"2020-02-29T23:41:56.104528571Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameLoadExistingGameTwice","Output":"    server_test.go:166: Expected game already loaded, got game loaded.\n"}
+{"Time":"2020-02-29T23:41:56.104540243Z","Action":"fail","Package":"_/workspace/gogam","Test":"TestGameLoadExistingGameTwice","Elapsed":0.3}
+{"Time":"2020-02-29T23:41:56.104551443Z","Action":"run","Package":"_/workspace/gogam","Test":"TestUserNewUnauthenticated"}
+{"Time":"2020-02-29T23:41:56.104558291Z","Action":"output","Package":"_/workspace/gogam","Test":"TestUserNewUnauthenticated","Output":"=== RUN   TestUserNewUnauthenticated\n"}
+{"Time":"2020-02-29T23:41:56.392322363Z","Action":"output","Package":"_/workspace/gogam","Test":"TestUserNewUnauthenticated","Output":"--- PASS: TestUserNewUnauthenticated (0.29s)\n"}
+{"Time":"2020-02-29T23:41:56.392398241Z","Action":"pass","Package":"_/workspace/gogam","Test":"TestUserNewUnauthenticated","Elapsed":0.29}
+{"Time":"2020-02-29T23:41:56.39242703Z","Action":"run","Package":"_/workspace/gogam","Test":"TestUserNewauthenticated"}
+{"Time":"2020-02-29T23:41:56.392440732Z","Action":"output","Package":"_/workspace/gogam","Test":"TestUserNewauthenticated","Output":"=== RUN   TestUserNewauthenticated\n"}
+{"Time":"2020-02-29T23:41:56.697494057Z","Action":"output","Package":"_/workspace/gogam","Test":"TestUserNewauthenticated","Output":"--- PASS: TestUserNewauthenticated (0.31s)\n"}
+{"Time":"2020-02-29T23:41:56.697561173Z","Action":"pass","Package":"_/workspace/gogam","Test":"TestUserNewauthenticated","Elapsed":0.31}
+{"Time":"2020-02-29T23:41:56.697584086Z","Action":"run","Package":"_/workspace/gogam","Test":"TestGameListNoExistingGames"}
+{"Time":"2020-02-29T23:41:56.697594983Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameListNoExistingGames","Output":"=== RUN   TestGameListNoExistingGames\n"}
+{"Time":"2020-02-29T23:41:56.977468845Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameListNoExistingGames","Output":"--- PASS: TestGameListNoExistingGames (0.28s)\n"}
+{"Time":"2020-02-29T23:41:56.977605407Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameListNoExistingGames","Output":"    server_test.go:214: []\n"}
+{"Time":"2020-02-29T23:41:56.977784059Z","Action":"pass","Package":"_/workspace/gogam","Test":"TestGameListNoExistingGames","Elapsed":0.28}
+{"Time":"2020-02-29T23:41:56.977815528Z","Action":"run","Package":"_/workspace/gogam","Test":"TestGameListTwoGames"}
+{"Time":"2020-02-29T23:41:56.977824517Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameListTwoGames","Output":"=== RUN   TestGameListTwoGames\n"}
+{"Time":"2020-02-29T23:41:57.295900702Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameListTwoGames","Output":"--- PASS: TestGameListTwoGames (0.32s)\n"}
+{"Time":"2020-02-29T23:41:57.2959657Z","Action":"pass","Package":"_/workspace/gogam","Test":"TestGameListTwoGames","Elapsed":0.32}
+{"Time":"2020-02-29T23:41:57.295993082Z","Action":"run","Package":"_/workspace/gogam","Test":"TestCharNewWithoutGame"}
+{"Time":"2020-02-29T23:41:57.296072545Z","Action":"output","Package":"_/workspace/gogam","Test":"TestCharNewWithoutGame","Output":"=== RUN   TestCharNewWithoutGame\n"}
+{"Time":"2020-02-29T23:41:57.771741488Z","Action":"output","Package":"_/workspace/gogam","Test":"TestCharNewWithoutGame","Output":"--- FAIL: TestCharNewWithoutGame (0.48s)\n"}
+{"Time":"2020-02-29T23:41:57.771803248Z","Action":"output","Package":"_/workspace/gogam","Test":"TestCharNewWithoutGame","Output":"    server_test.go:261: Expected game id not found, got game not found.\n"}
+{"Time":"2020-02-29T23:41:57.771833475Z","Action":"fail","Package":"_/workspace/gogam","Test":"TestCharNewWithoutGame","Elapsed":0.48}
+{"Time":"2020-02-29T23:41:57.771846354Z","Action":"run","Package":"_/workspace/gogam","Test":"TestCharNewwithExistingGame"}
+{"Time":"2020-02-29T23:41:57.771853157Z","Action":"output","Package":"_/workspace/gogam","Test":"TestCharNewwithExistingGame","Output":"=== RUN   TestCharNewwithExistingGame\n"}
+{"Time":"2020-02-29T23:41:58.112958018Z","Action":"output","Package":"_/workspace/gogam","Test":"TestCharNewwithExistingGame","Output":"--- PASS: TestCharNewwithExistingGame (0.34s)\n"}
+{"Time":"2020-02-29T23:41:58.113052789Z","Action":"pass","Package":"_/workspace/gogam","Test":"TestCharNewwithExistingGame","Elapsed":0.34}
+{"Time":"2020-02-29T23:41:58.113091933Z","Action":"run","Package":"_/workspace/gogam","Test":"TestCharListWithoutExistingChar"}
+{"Time":"2020-02-29T23:41:58.113108647Z","Action":"output","Package":"_/workspace/gogam","Test":"TestCharListWithoutExistingChar","Output":"=== RUN   TestCharListWithoutExistingChar\n"}
+{"Time":"2020-02-29T23:41:58.385471971Z","Action":"output","Package":"_/workspace/gogam","Test":"TestCharListWithoutExistingChar","Output":"--- PASS: TestCharListWithoutExistingChar (0.27s)\n"}
+{"Time":"2020-02-29T23:41:58.385658196Z","Action":"pass","Package":"_/workspace/gogam","Test":"TestCharListWithoutExistingChar","Elapsed":0.27}
+{"Time":"2020-02-29T23:41:58.385722932Z","Action":"run","Package":"_/workspace/gogam","Test":"TestCharListWithExistingChar"}
+{"Time":"2020-02-29T23:41:58.38574544Z","Action":"output","Package":"_/workspace/gogam","Test":"TestCharListWithExistingChar","Output":"=== RUN   TestCharListWithExistingChar\n"}
+{"Time":"2020-02-29T23:41:58.700016856Z","Action":"output","Package":"_/workspace/gogam","Test":"TestCharListWithExistingChar","Output":"--- PASS: TestCharListWithExistingChar (0.31s)\n"}
+{"Time":"2020-02-29T23:41:58.700092189Z","Action":"pass","Package":"_/workspace/gogam","Test":"TestCharListWithExistingChar","Elapsed":0.31}
+{"Time":"2020-02-29T23:41:58.70013632Z","Action":"run","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame"}
+{"Time":"2020-02-29T23:41:58.700154563Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"=== RUN   TestGameJoinNonloadedGame\n"}
+{"Time":"2020-02-29T23:41:59.020949923Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"--- FAIL: TestGameJoinNonloadedGame (0.32s)\n"}
+{"Time":"2020-02-29T23:41:59.023074323Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"panic: runtime error: invalid memory address or nil pointer dereference [recovered]\n"}
+{"Time":"2020-02-29T23:41:59.023117197Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"\tpanic: runtime error: invalid memory address or nil pointer dereference\n"}
+{"Time":"2020-02-29T23:41:59.023127742Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"[signal SIGSEGV: segmentation violation code=0x1 addr=0x88 pc=0x80e188]\n"}
+{"Time":"2020-02-29T23:41:59.023134898Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"\n"}
+{"Time":"2020-02-29T23:41:59.023154915Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"goroutine 119 [running]:\n"}
+{"Time":"2020-02-29T23:41:59.023377253Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"testing.tRunner.func1(0xc0001b6b00)\n"}
+{"Time":"2020-02-29T23:41:59.023398492Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"\t/home/gitpod/go/src/testing/testing.go:874 +0x3a3\n"}
+{"Time":"2020-02-29T23:41:59.023413352Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"panic(0x93e0a0, 0xd48070)\n"}
+{"Time":"2020-02-29T23:41:59.023422484Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"\t/home/gitpod/go/src/runtime/panic.go:679 +0x1b2\n"}
+{"Time":"2020-02-29T23:41:59.023433875Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"_/workspace/gogam.(*Server).gameHandler(0xc000091900, 0xa6bbc0, 0xc0000918c0, 0xc0001aea00)\n"}
+{"Time":"2020-02-29T23:41:59.023453777Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"\t/workspace/gogam/server.go:220 +0x1288\n"}
+{"Time":"2020-02-29T23:41:59.023462949Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"_/workspace/gogam.postRequestGameHandler(0x9c16c1, 0x9, 0xc000091900, 0xc0000918c0, 0xc00027e000, 0x2, 0x600, 0x0, 0x0)\n"}
+{"Time":"2020-02-29T23:41:59.023472972Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"\t/workspace/gogam/server_test.go:30 +0x242\n"}
+{"Time":"2020-02-29T23:41:59.023481843Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"_/workspace/gogam.TestGameJoinNonloadedGame(0xc0001b6b00)\n"}
+{"Time":"2020-02-29T23:41:59.023492178Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"\t/workspace/gogam/server_test.go:333 +0x1c4\n"}
+{"Time":"2020-02-29T23:41:59.02350091Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"testing.tRunner(0xc0001b6b00, 0x9dfc08)\n"}
+{"Time":"2020-02-29T23:41:59.023511649Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"\t/home/gitpod/go/src/testing/testing.go:909 +0xc9\n"}
+{"Time":"2020-02-29T23:41:59.023520415Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"created by testing.(*T).Run\n"}
+{"Time":"2020-02-29T23:41:59.023529121Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"\t/home/gitpod/go/src/testing/testing.go:960 +0x350\n"}
+{"Time":"2020-02-29T23:41:59.028151864Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"exit status 2\n"}
+{"Time":"2020-02-29T23:41:59.028201231Z","Action":"output","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Output":"FAIL\t_/workspace/gogam\t5.088s\n"}
+{"Time":"2020-02-29T23:41:59.028225955Z","Action":"fail","Package":"_/workspace/gogam","Test":"TestGameJoinNonloadedGame","Elapsed":5.088}

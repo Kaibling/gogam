@@ -62,7 +62,6 @@ func (selfclientCli *clientCli) sendCommand(command string) string {
 func executor(in string) {
 
 	in = strings.TrimSpace(in)
-
 	command := strings.Split(in, " ")
 	switch command[0] {
 	case "q", "quit":
@@ -78,14 +77,9 @@ func executor(in string) {
 		if command[1] == "new" {
 			clientObject.sendCommand(in)
 		}
+
 	case "game":
-		if command[1] == "join" {
-			clientObject.sendCommand(in)
-		}
-		if command[1] == "load" {
-			clientObject.sendCommand(in)
-		}
-		if command[1] == "new" {
+		if command[1] == "join" || command[1] == "load" || command[1] == "new" {
 			clientObject.sendCommand(in)
 		}
 		if command[1] == "list" {
@@ -96,6 +90,7 @@ func executor(in string) {
 				fmt.Println(cnt, ": ", gameName)
 			}
 		}
+
 	case "ls":
 		fmt.Println(clientObject.url)
 		baseURL, err := url.Parse(clientObject.url)
@@ -103,15 +98,15 @@ func executor(in string) {
 			fmt.Println("Malformed URL: ", err.Error())
 			return
 		}
+
 		fmt.Println(clientObject.jar.Cookies(baseURL))
 		fmt.Println(clientObject.username)
+		
 	case "char":
-		if command[1] == "new" {
+		if command[1] == "new" || command[1] == "stats" {
 			clientObject.sendCommand(in)
 		}
-		if command[1] == "stats" {
-			clientObject.sendCommand(in)
-		}
+
 	case "":
 	default:
 		fmt.Println("unknown command")
