@@ -107,7 +107,7 @@ func BoardParser() *gameField{
 	}
 	return &gameField {
 		Field:&board,
-		startPoints: startPoints,
+		StartPoints: startPoints,
 	}
 
 }

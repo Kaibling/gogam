@@ -41,8 +41,9 @@ func (selfTile *tile) initTile() {
 }
 
 type gameField struct {
+	Name 		string
 	Field       *[][]tile
-	startPoints []position
+	StartPoints []position
 }
 
 func (selfGameField *gameField) ShowMap() {
@@ -54,12 +55,12 @@ func (selfGameField *gameField) ShowMap() {
 	}
 }
 func (selfGameField *gameField) getStartPosition() (position, error) {
-	if len(selfGameField.startPoints) == 0 {
+	if len(selfGameField.StartPoints) == 0 {
 		return position{}, errors.New("no Starting Points available")
 
 	}
-	returnPosition := selfGameField.startPoints[len(selfGameField.startPoints)-1]
-	selfGameField.startPoints = selfGameField.startPoints[:len(selfGameField.startPoints)-1]
+	returnPosition := selfGameField.StartPoints[len(selfGameField.StartPoints)-1]
+	selfGameField.StartPoints = selfGameField.StartPoints[:len(selfGameField.StartPoints)-1]
 	return returnPosition, nil
 
 }
@@ -69,12 +70,23 @@ type position struct {
 	Y int
 }
 
+
 type game struct {
 	gorm.Model
-	Characters []*character `gorm:"many2many:game_character;association_jointable_foreignkey:character_id"`
-	Name       string
-	GameField  *gameField
+	Characters 		[]*character `gorm:"many2many:game_character;association_jointable_foreignkey:character_id"`
+	Name       		string
+	GameField  		*gameField
+	GameFiledJSON	[]byte
 	InProgress bool
+}
+
+func (selfGame *game) loadGameField() error {
+	return json.Unmarshal(selfGame.GameFiledJSON,&selfGame.GameField)
+}
+func (selfGame *game) saveGameField() error {
+	var err error
+	selfGame.GameFiledJSON, err = json.Marshal(&selfGame.GameField)
+	return err
 }
 
 func (selfGame *game) characterOverview() {
