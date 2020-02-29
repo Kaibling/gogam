@@ -16,7 +16,6 @@ import (
 /*
 
 		{Text: "game start"},
-		{Text: "game join",Description: "game join: joins game"},
 */
 
 
@@ -315,10 +314,89 @@ func TestCharListWithExistingChar(t *testing.T) {
 	postRequestGameHandler("game new world1","/game",testServer,res)
 	postRequestGameHandler("char new char1 1","/game",testServer,res)
 	content, _ := postRequestGameHandler("char list","/game",testServer,res)
-	expected := []string{"chari"}
+	expected := []string{"char1"}
 	contentStrngArray := strings.Split(string(content)," ")
 	
 	if reflect.DeepEqual(contentStrngArray,expected) {
+		t.Errorf("Expected %s, got %s.", expected, string(content))
+	}
+	os.Remove("gogam.db")
+
+}
+
+func TestGameJoinNonloadedGame(t *testing.T) {
+	//char new char1 0
+	res := httptest.NewRecorder()
+	testServer := new(Server)
+	testServer.initiateServer()
+
+	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestGameHandler("game new world1","/game",testServer,res)
+	postRequestGameHandler("char new char1 1","/game",testServer,res)
+	content, _ := postRequestGameHandler("game join","/game",testServer,res)
+	expected := "no game loaded"
+
+	if string(content) != expected {
+		t.Errorf("Expected %s, got %s.", expected, string(content))
+	}
+	os.Remove("gogam.db")
+
+}
+
+func TestGameJoinLoadedGame(t *testing.T) {
+	//char new char1 0
+	res := httptest.NewRecorder()
+	testServer := new(Server)
+	testServer.initiateServer()
+
+	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestGameHandler("game new world1","/game",testServer,res)
+	postRequestGameHandler("char new char1 1","/game",testServer,res)
+	postRequestGameHandler("game load 1","/game",testServer,res)
+	content, _ := postRequestGameHandler("game join","/game",testServer,res)
+	expected := "OK"
+
+	if string(content) != expected {
+		t.Errorf("Expected %s, got %s.", expected, string(content))
+	}
+	os.Remove("gogam.db")
+
+}
+
+func TestGameJoinLoadedGameWithoutChar(t *testing.T) {
+	//char new char1 0
+	res := httptest.NewRecorder()
+	testServer := new(Server)
+	testServer.initiateServer()
+
+	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestGameHandler("game new world1","/game",testServer,res)
+	postRequestGameHandler("game load 1","/game",testServer,res)
+	content, _ := postRequestGameHandler("game join","/game",testServer,res)
+	expected := "no character for this game"
+
+	if string(content) != expected {
+		t.Errorf("Expected %s, got %s.", expected, string(content))
+	}
+	os.Remove("gogam.db")
+
+}
+
+func TestGameJoinLoadedGameWithWrongChar(t *testing.T) {
+	//char new char1 0
+	res := httptest.NewRecorder()
+	testServer := new(Server)
+	testServer.initiateServer()
+
+	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestGameHandler("game new world1","/game",testServer,res)
+	postRequestGameHandler("game new world2","/game",testServer,res)
+	postRequestGameHandler("char new char1 1","/game",testServer,res)
+	postRequestGameHandler("game load 2","/game",testServer,res)
+	content, _ := postRequestGameHandler("game join","/game",testServer,res)
+	expected := "no character for this world"
+
+	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
 	}
 	os.Remove("gogam.db")

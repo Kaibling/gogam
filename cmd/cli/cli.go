@@ -147,12 +147,14 @@ func main() {
 	clientObject.login("admin")
 	//create new game
 	clientObject.sendCommand("game new welt1")
+	clientObject.sendCommand("game new welt2")
 	//load new game
 	clientObject.sendCommand("game load 1")
 	//new character
-	//clientObject.sendCommand("char new char1 0")
+	clientObject.sendCommand("char new char1 1")
+	clientObject.sendCommand("char new char2 2")
 	//join game
-	//clientObject.sendCommand("char new char1 0")
+	clientObject.sendCommand("game join")
 
 
 /*

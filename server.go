@@ -210,7 +210,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, string(byteArray))
 			return
 		} else if bodyString[1] == "join" {
-			if len(bodyString) != 3 {
+			if len(bodyString) != 2 {
 				fmt.Fprintf(w, "not enough arguments")
 				return
 			}
@@ -224,6 +224,21 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				//new game starting
 				var loadCharacter character
+				//selfServer.db.Debug().Find(&loadCharacter,"game_id = ?", selfServer.game.ID).Related(&sessionUser)
+				//record := &struct {ID uint}{}
+				record := &struct {ID uint}{}
+				selfServer.db.Debug().Table("users").
+					Select("character.id").
+					Joins("join user_character on user_character.user_id = user.id").
+					Joins("join characters on user_character.character_id = characters.id").
+					Joins("join game_character on game_character.character_id = characters.id").
+					Joins("join games on game_character.character_id = characters.id").
+					Where("game.id = ?", selfServer.game.ID).Scan(record)
+
+				//selfServer.db.Where(&sessionUser).Find(&loadCharacter)
+				//db.Model(&user).Related(&card, "CreditCard")
+				log.Info("found:",toJSON(record))
+
 				selfServer.game.addCharacter(&loadCharacter)
 				selfServer.db.Save(&selfServer.game)
 				fmt.Fprintf(w, "OK")
@@ -254,8 +269,6 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintf(w, "game id not found")
 				return
 			}
-			log.Info(toJSON(loadGame))
-
 			newChar := &character{
 				Name:       characterName,
 				Game:       &loadGame,
