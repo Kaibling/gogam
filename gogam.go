@@ -23,11 +23,7 @@ func (selfTile *tile) initTile() {
 	case '=':
 		//Wall
 		selfTile.Info = "There is a Wall"
-	case 'S':
-		//Startpoint
-		selfTile.Info = "Only the Floor"
-		selfTile.Movable = true
-	case ' ':
+	case ' ', 'S':
 		//Floor
 		selfTile.Info = "Only the Floor"
 		selfTile.Movable = true
@@ -41,7 +37,7 @@ func (selfTile *tile) initTile() {
 }
 
 type gameField struct {
-	Name 		string
+	Name        string
 	Field       *[][]tile
 	StartPoints []position
 }
@@ -70,18 +66,17 @@ type position struct {
 	Y int
 }
 
-
 type game struct {
 	gorm.Model
-	Characters 		[]*character `gorm:"many2many:game_character;association_jointable_foreignkey:character_id"`
-	Name       		string
-	GameField  		*gameField
-	GameFiledJSON	[]byte
-	InProgress bool
+	Characters    []*character `gorm:"many2many:game_character;association_jointable_foreignkey:character_id"`
+	Name          string
+	GameField     *gameField
+	GameFiledJSON []byte
+	InProgress    bool
 }
 
 func (selfGame *game) loadGameField() error {
-	return json.Unmarshal(selfGame.GameFiledJSON,&selfGame.GameField)
+	return json.Unmarshal(selfGame.GameFiledJSON, &selfGame.GameField)
 }
 func (selfGame *game) saveGameField() error {
 	var err error
@@ -150,7 +145,6 @@ type classType struct {
 func attack(attacker *character, attackID int, defender *character) {
 	attackingSkill := attacker.Skills[attackID]
 	reduction := defender.getReduction()
-	//todo: dafaque
 	floatDamage := float64(attackingSkill.BaseDamage) - (float64(reduction)/100)*float64(attackingSkill.BaseDamage)
 	damage := math.Round(floatDamage)
 	log.Println("attackingSkill.baseDamage ", attackingSkill.BaseDamage)

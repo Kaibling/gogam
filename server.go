@@ -15,9 +15,17 @@ import (
 	log "github.com/sirupsen/logrus"
 	math_rand "math/rand"
 	"reflect"
-	"strings"
 	"strconv"
+	"strings"
 )
+
+var apiResponseForbidden = "ynogo"
+var apiResponseOk = "OK"
+var apiResponseMissingArguments = "not enough arguments"
+var apiResponseGameAlreadyRunning = "game already running"
+var apiResponseGameLoaded = "game loaded"
+var apiResponseGameIDNotFound = "game not found"
+var apiResponseUsernameInUser = "Username already in use"
 
 type user struct {
 	gorm.Model
@@ -66,7 +74,7 @@ func (selfServer *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 	if reflect.DeepEqual(user{}, loginUser) {
 		log.Debug("no user found in db for :", username)
 		log.Debug("sending http.StatusUnauthorized ")
-		fmt.Fprintf(w, "ynogo")
+		fmt.Fprintf(w, apiResponseForbidden)
 		//http.Error(w, "ynogo" , http.StatusUnauthorized)
 		return
 	}
@@ -79,7 +87,7 @@ func (selfServer *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Debug("Erros saving user to session:", err)
 	}
-	fmt.Fprintf(w, "OK")
+	fmt.Fprintf(w, apiResponseOk)
 
 }
 
@@ -103,7 +111,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	authenticated := false
 	if sessionUser, ok = val.(*user); !ok {
 		log.Debug("not authenticated:", session.Values["user"])
-		fmt.Fprintf(w, "ynogo")
+		fmt.Fprintf(w, apiResponseForbidden)
 		return
 	}
 	log.Debug("User authenticated:", sessionUser.Nick)
@@ -114,7 +122,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 		switch bodyString[1] {
 		case "new":
 			if len(bodyString) != 3 {
-				fmt.Fprintf(w, "not enough arguments")
+				fmt.Fprintf(w, apiResponseMissingArguments)
 				return
 			}
 			username := bodyString[2]
@@ -123,7 +131,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 
 			if !reflect.DeepEqual(user{}, loginUser) {
 				log.Debug("Username already in use")
-				fmt.Fprintf(w, "Username already in use")
+				fmt.Fprintf(w, apiResponseUsernameInUser)
 				return
 			}
 			loginUser = user{
@@ -131,7 +139,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			selfServer.db.Create(&loginUser)
 			log.Debug("Saved user :", username, " in Seesions")
-			fmt.Fprintf(w, "OK")
+			fmt.Fprintf(w, apiResponseOk)
 			return
 		}
 	case "load":
@@ -141,34 +149,34 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	case "game":
 		if bodyString[1] == "new" {
 			if len(bodyString) != 3 {
-				fmt.Fprintf(w, "not enough arguments")
+				fmt.Fprintf(w, apiResponseMissingArguments)
 				return
 			}
 			newGame := &game{
 				Name:       bodyString[2],
 				InProgress: false,
-				GameField: BoardParser(),
+				GameField:  BoardParser(),
 			}
 			newGame.saveGameField()
 			selfServer.db.Create(&newGame)
-			log.Debug("game saved: ",newGame.Name)
+			log.Debug("game saved: ", newGame.Name)
 
 		} else if bodyString[1] == "load" {
 			if len(bodyString) != 3 {
-				fmt.Fprintf(w, "not enough arguments")
+				fmt.Fprintf(w, apiResponseMissingArguments)
 				return
 			}
 			//check, if game already loaded
 			if selfServer.game != nil {
 				//game loaded
 				log.Debug("game already loaded")
-				fmt.Fprintf(w, "game already loaded")
+				fmt.Fprintf(w, apiResponseGameLoaded)
 				return
 			}
 			var err error
-			gameID,err := strconv.ParseUint(bodyString[2], 10, 32)
+			gameID, err := strconv.ParseUint(bodyString[2], 10, 32)
 			if err != nil {
-				log.Debug("error thingy: ",err)
+				log.Debug("error thingy: ", err)
 			}
 			log.Debug("loading game :", gameID)
 			var loadGame game
@@ -177,24 +185,18 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			selfServer.db.Preload("Characters").Find(&loadGame, "id = ?", gameID)
 			if reflect.DeepEqual(loadGame, loadGameCheck) {
 				log.Debug("game id not found:", gameID)
-				fmt.Fprintf(w, "game id not found")
+				fmt.Fprintf(w, apiResponseGameIDNotFound)
 				return
 			}
-			//if loadGame.ID != uint(gameID) {
-			//	log.Debug("game id not found:", gameID)
-			//	fmt.Fprintf(w, "game id not found")
-			//	return
-			//}
+
 			selfServer.game = &loadGame
 			err = selfServer.game.loadGameField()
 			if err != nil {
 				log.Warn(err)
 			}
 			log.Debug("game loaded:", loadGame.ID)
-			fmt.Fprintf(w, "game successful loaded")
+			fmt.Fprintf(w, apiResponseGameLoaded)
 			return
-
-
 
 		} else if bodyString[1] == "list" {
 			var gameArray []game
@@ -211,7 +213,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		} else if bodyString[1] == "join" {
 			if len(bodyString) != 2 {
-				fmt.Fprintf(w, "not enough arguments")
+				fmt.Fprintf(w, apiResponseMissingArguments)
 				return
 			}
 
@@ -226,7 +228,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 				var loadCharacter character
 				//selfServer.db.Debug().Find(&loadCharacter,"game_id = ?", selfServer.game.ID).Related(&sessionUser)
 				//record := &struct {ID uint}{}
-				record := &struct {ID uint}{}
+				record := &struct{ ID uint }{}
 				selfServer.db.Debug().Table("users").
 					Select("character.id").
 					Joins("join user_character on user_character.user_id = user.id").
@@ -237,11 +239,11 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 
 				//selfServer.db.Where(&sessionUser).Find(&loadCharacter)
 				//db.Model(&user).Related(&card, "CreditCard")
-				log.Info("found:",toJSON(record))
+				log.Info("found:", toJSON(record))
 
 				selfServer.game.addCharacter(&loadCharacter)
 				selfServer.db.Save(&selfServer.game)
-				fmt.Fprintf(w, "OK")
+				fmt.Fprintf(w, apiResponseOk)
 				return
 			}
 
@@ -251,7 +253,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	case "char":
 		if bodyString[1] == "new" {
 			if len(bodyString) != 4 {
-				fmt.Fprintf(w, "not enough arguments")
+				fmt.Fprintf(w, apiResponseMissingArguments)
 				return
 			}
 
@@ -266,7 +268,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			selfServer.db.Find(&loadGame, "id = ?", gameID)
 			if reflect.DeepEqual(loadGame, loadGameCheck) {
 				log.Debug("game id not found:", gameID)
-				fmt.Fprintf(w, "game id not found")
+				fmt.Fprintf(w, apiResponseGameIDNotFound)
 				return
 			}
 			newChar := &character{
@@ -319,7 +321,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 
 		}
 	}
-	fmt.Fprintf(w, "OK")
+	fmt.Fprintf(w, apiResponseOk)
 }
 func (selfServer *Server) initiateServer() {
 
@@ -353,27 +355,27 @@ func (selfServer *Server) StartServer() {
 	log.Debug("Server is listening on Port: ", selfServer.BindingPort)
 	http.ListenAndServe(":"+selfServer.BindingPort, nil)
 	/*
-		selfServer.Users = append(selfServer.Users,user{
-			nick:"fritz",
-			//CharacterID: 1,
-		})
-		selfServer.Users[0].Character = &character {
-		PlayerID: 1,
-		Name: "supermage",
-	    Level: 1,
-	    Health: 10,
-	    MaxHealth: 10,
-		Experience: 2,
-		}
+			selfServer.Users = append(selfServer.Users,user{
+				nick:"fritz",
+				//CharacterID: 1,
+			})
+			selfServer.Users[0].Character = &character {
+			PlayerID: 1,
+			Name: "supermage",
+		    Level: 1,
+		    Health: 10,
+		    MaxHealth: 10,
+			Experience: 2,
+			}
 
 
-		game := &Game{
-		Name: "hans",
-		GameField: BoardParser(),
-		}
-		game.addCharacter(selfServer.Users[0].Character)
-		game.GameField.ShowMap()
-		game.characterOverview()
+			game := &Game{
+			Name: "hans",
+			GameField: BoardParser(),
+			}
+			game.addCharacter(selfServer.Users[0].Character)
+			game.GameField.ShowMap()
+			game.characterOverview()
 
 
 	*/

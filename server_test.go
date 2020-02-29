@@ -4,40 +4,38 @@ import (
 	"io/ioutil"
 	"strings"
 	//log "github.com/sirupsen/logrus"
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"testing"
 	"reflect"
-	"bytes"
-	"encoding/json"
+	"testing"
 )
 
 /*
 
-		{Text: "game start"},
+	{Text: "game start"},
 */
 
-
-func postRequestGameHandler(command string,url string,testServer *Server,res *httptest.ResponseRecorder) ([]byte, error) {
+func postRequestGameHandler(command string, testServer *Server, res *httptest.ResponseRecorder) ([]byte, error) {
 	a := bytes.NewBuffer([]byte(command))
-	req, _ := http.NewRequest("POST", url, a)
+	req, _ := http.NewRequest("POST", "/game", a)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	if len(res.Result().Cookies()) > 0 {
 		req.AddCookie(res.Result().Cookies()[0])
 	}
 	testServer.gameHandler(res, req)
- 	return ioutil.ReadAll(res.Body)
+	return ioutil.ReadAll(res.Body)
 }
 
-func postRequestLoginHandler(command string,url string,testServer *Server,res *httptest.ResponseRecorder) ([]byte, error) {
+func postRequestLoginHandler(command string, testServer *Server, res *httptest.ResponseRecorder) ([]byte, error) {
 	a := bytes.NewBuffer([]byte(command))
-	req, _ := http.NewRequest("POST", url, a)
+	req, _ := http.NewRequest("POST", "/login", a)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	testServer.loginHandler(res, req)
- 	return ioutil.ReadAll(res.Body)
+	return ioutil.ReadAll(res.Body)
 }
-
 
 func TestLoginFailing(t *testing.T) {
 
@@ -45,7 +43,7 @@ func TestLoginFailing(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	content, _ := postRequestLoginHandler("aasd","/login",testServer,res)
+	content, _ := postRequestLoginHandler("aasd", testServer, res)
 	expected := "ynogo"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -59,7 +57,7 @@ func TestLoginSuccess(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	content, _ := postRequestLoginHandler("admin","/login",testServer,res)
+	content, _ := postRequestLoginHandler("admin", testServer, res)
 	expected := "OK"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -74,7 +72,7 @@ func TestNewGameUnautheticated(t *testing.T) {
 	testServer.initiateServer()
 
 	//test game new (unauthenticated)
-	content, _ := postRequestGameHandler("game load 1","/game",testServer,res)	
+	content, _ := postRequestGameHandler("game load 1", testServer, res)
 	expected := "ynogo"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -87,9 +85,9 @@ func TestNewGameautheticatednoGameID(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
 
-	content, _ := postRequestGameHandler("game new","/game",testServer,res)
+	content, _ := postRequestGameHandler("game new", testServer, res)
 	expected := "not enough arguments"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -103,16 +101,15 @@ func TestNewGameautheticatednewGame(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
 
-	content, _ := postRequestGameHandler("game new world1","/game",testServer,res)
+	content, _ := postRequestGameHandler("game new world1", testServer, res)
 	expected := "OK"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
 	}
 	os.Remove("gogam.db")
 }
-
 
 func TestGameLoadNonExistingGame(t *testing.T) {
 	//os.Remove("gogam.db")
@@ -123,16 +120,16 @@ func TestGameLoadNonExistingGame(t *testing.T) {
 	testServer.initiateServer()
 
 	//login/get session
-	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
 	//load game without create
 	//postRequestGameHandler("game load 1","/game",testServer,res)
-	content, _ := postRequestGameHandler("game load 2","/game",testServer,res)
+	content, _ := postRequestGameHandler("game load 2", testServer, res)
 	expected := "game id not found"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
 	}
 	os.Remove("gogam.db")
-	
+
 }
 
 func TestGameLoadExistingGame(t *testing.T) {
@@ -141,10 +138,10 @@ func TestGameLoadExistingGame(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
 
-	postRequestGameHandler("game new world1","/game",testServer,res)
-	content, _ := postRequestGameHandler("game load 1","/game",testServer,res)
+	postRequestGameHandler("game new world1", testServer, res)
+	content, _ := postRequestGameHandler("game load 1", testServer, res)
 	expected := "game successful loaded"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -159,11 +156,11 @@ func TestGameLoadExistingGameTwice(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
 
-	postRequestGameHandler("game new world1","/game",testServer,res)
-	postRequestGameHandler("game load 1","/game",testServer,res)
-	content, _ := postRequestGameHandler("game load 1","/game",testServer,res)
+	postRequestGameHandler("game new world1", testServer, res)
+	postRequestGameHandler("game load 1", testServer, res)
+	content, _ := postRequestGameHandler("game load 1", testServer, res)
 	expected := "game already loaded"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -178,7 +175,7 @@ func TestUserNewUnauthenticated(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	content, _ := postRequestGameHandler("user new user1","/game",testServer,res)
+	content, _ := postRequestGameHandler("user new user1", testServer, res)
 	expected := "ynogo"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -192,9 +189,9 @@ func TestUserNewauthenticated(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
 
-	content, _ := postRequestGameHandler("user new user1","/game",testServer,res)
+	content, _ := postRequestGameHandler("user new user1", testServer, res)
 	expected := "OK"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
@@ -209,15 +206,15 @@ func TestGameListNoExistingGames(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
 
-	content, _ := postRequestGameHandler("game list","/game",testServer,res)
+	content, _ := postRequestGameHandler("game list", testServer, res)
 	var gameNameArray []string
-	json.Unmarshal([]byte(content),&gameNameArray)
+	json.Unmarshal([]byte(content), &gameNameArray)
 	t.Log(gameNameArray)
-	expected:=[]string{}
+	expected := []string{}
 
-	if reflect.DeepEqual(gameNameArray,expected) {
+	if reflect.DeepEqual(gameNameArray, expected) {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
 	}
 	os.Remove("gogam.db")
@@ -231,17 +228,17 @@ func TestGameListTwoGames(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
 
-	postRequestGameHandler("game new world1","/game",testServer,res)
-	postRequestGameHandler("game new world2","/game",testServer,res)
+	postRequestGameHandler("game new world1", testServer, res)
+	postRequestGameHandler("game new world2", testServer, res)
 
-	content, _ := postRequestGameHandler("game list","/game",testServer,res)
-	expected := []string{"world1","world2"}
-	//expected := ["world1","world2"] 
-	contentStrngArray := strings.Split(string(content)," ")
-	
-	if reflect.DeepEqual(contentStrngArray,expected) {
+	content, _ := postRequestGameHandler("game list", testServer, res)
+	expected := []string{"world1", "world2"}
+	//expected := ["world1","world2"]
+	contentStrngArray := strings.Split(string(content), " ")
+
+	if reflect.DeepEqual(contentStrngArray, expected) {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
 	}
 	os.Remove("gogam.db")
@@ -255,9 +252,9 @@ func TestCharNewWithoutGame(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
 
-	content, _ := postRequestGameHandler("char new char1 1","/game",testServer,res)
+	content, _ := postRequestGameHandler("char new char1 1", testServer, res)
 	expected := "game id not found"
 
 	if string(content) != expected {
@@ -273,10 +270,10 @@ func TestCharNewwithExistingGame(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
-	postRequestGameHandler("game new world1","/game",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
+	postRequestGameHandler("game new world1", testServer, res)
 
-	content, _ := postRequestGameHandler("char new char1 1","/game",testServer,res)
+	content, _ := postRequestGameHandler("char new char1 1", testServer, res)
 	expected := "OK"
 
 	if string(content) != expected {
@@ -292,12 +289,12 @@ func TestCharListWithoutExistingChar(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
-	content, _ := postRequestGameHandler("char list","/game",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
+	content, _ := postRequestGameHandler("char list", testServer, res)
 	expected := []string{}
-	contentStrngArray := strings.Split(string(content)," ")
-	
-	if reflect.DeepEqual(contentStrngArray,expected) {
+	contentStrngArray := strings.Split(string(content), " ")
+
+	if reflect.DeepEqual(contentStrngArray, expected) {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
 	}
 	os.Remove("gogam.db")
@@ -310,14 +307,14 @@ func TestCharListWithExistingChar(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
-	postRequestGameHandler("game new world1","/game",testServer,res)
-	postRequestGameHandler("char new char1 1","/game",testServer,res)
-	content, _ := postRequestGameHandler("char list","/game",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
+	postRequestGameHandler("game new world1", testServer, res)
+	postRequestGameHandler("char new char1 1", testServer, res)
+	content, _ := postRequestGameHandler("char list", testServer, res)
 	expected := []string{"char1"}
-	contentStrngArray := strings.Split(string(content)," ")
-	
-	if reflect.DeepEqual(contentStrngArray,expected) {
+	contentStrngArray := strings.Split(string(content), " ")
+
+	if reflect.DeepEqual(contentStrngArray, expected) {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
 	}
 	os.Remove("gogam.db")
@@ -330,10 +327,10 @@ func TestGameJoinNonloadedGame(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
-	postRequestGameHandler("game new world1","/game",testServer,res)
-	postRequestGameHandler("char new char1 1","/game",testServer,res)
-	content, _ := postRequestGameHandler("game join","/game",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
+	postRequestGameHandler("game new world1", testServer, res)
+	postRequestGameHandler("char new char1 1", testServer, res)
+	content, _ := postRequestGameHandler("game join", testServer, res)
 	expected := "no game loaded"
 
 	if string(content) != expected {
@@ -349,11 +346,11 @@ func TestGameJoinLoadedGame(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
-	postRequestGameHandler("game new world1","/game",testServer,res)
-	postRequestGameHandler("char new char1 1","/game",testServer,res)
-	postRequestGameHandler("game load 1","/game",testServer,res)
-	content, _ := postRequestGameHandler("game join","/game",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
+	postRequestGameHandler("game new world1", testServer, res)
+	postRequestGameHandler("char new char1 1", testServer, res)
+	postRequestGameHandler("game load 1", testServer, res)
+	content, _ := postRequestGameHandler("game join", testServer, res)
 	expected := "OK"
 
 	if string(content) != expected {
@@ -369,10 +366,10 @@ func TestGameJoinLoadedGameWithoutChar(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
-	postRequestGameHandler("game new world1","/game",testServer,res)
-	postRequestGameHandler("game load 1","/game",testServer,res)
-	content, _ := postRequestGameHandler("game join","/game",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
+	postRequestGameHandler("game new world1", testServer, res)
+	postRequestGameHandler("game load 1", testServer, res)
+	content, _ := postRequestGameHandler("game join", testServer, res)
 	expected := "no character for this game"
 
 	if string(content) != expected {
@@ -388,12 +385,12 @@ func TestGameJoinLoadedGameWithWrongChar(t *testing.T) {
 	testServer := new(Server)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin","/login",testServer,res)
-	postRequestGameHandler("game new world1","/game",testServer,res)
-	postRequestGameHandler("game new world2","/game",testServer,res)
-	postRequestGameHandler("char new char1 1","/game",testServer,res)
-	postRequestGameHandler("game load 2","/game",testServer,res)
-	content, _ := postRequestGameHandler("game join","/game",testServer,res)
+	postRequestLoginHandler("admin", testServer, res)
+	postRequestGameHandler("game new world1", testServer, res)
+	postRequestGameHandler("game new world2", testServer, res)
+	postRequestGameHandler("char new char1 1", testServer, res)
+	postRequestGameHandler("game load 2", testServer, res)
+	content, _ := postRequestGameHandler("game join", testServer, res)
 	expected := "no character for this world"
 
 	if string(content) != expected {
