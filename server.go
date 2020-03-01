@@ -91,41 +91,14 @@ func (selfServer *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
-	session, err := selfServer.sessionStore.Get(r, "gogam-session")
-	if err != nil {
-		log.Debug("error creating session")
-	}
-
-	bodyBytes, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	bodyString := strings.Split(string(bodyBytes), " ")
-	log.Debug("recieved data :", bodyString)
-
-	val := session.Values["user"]
-	var sessionUser = &user{}
-	var ok bool
-	authenticated := false
-	if sessionUser, ok = val.(*user); !ok {
-		log.Debug("not authenticated:", session.Values["user"])
-		fmt.Fprintf(w, apiResponseForbidden)
-		return
-	}
-	log.Debug("User authenticated:", sessionUser.Nick)
-	authenticated = true
-
-	switch bodyString[0] {
-	case "user":
-		switch bodyString[1] {
+func userCommandHandler (command []string,selfServer *Server,w http.ResponseWriter) {
+	switch command[1] {
 		case "new":
-			if len(bodyString) != 3 {
+			if len(command) != 3 {
 				fmt.Fprintf(w, apiResponseMissingArguments)
 				return
 			}
-			username := bodyString[2]
+			username := command[2]
 			var loginUser user
 			selfServer.db.First(&loginUser, "nick = ?", username)
 
@@ -142,27 +115,82 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, apiResponseOk)
 			return
 		}
-	case "load":
-		if authenticated {
-			log.Debug("sd")
+}
+
+func charCommandHandler (command []string,selfServer *Server,w http.ResponseWriter,sessionUser *user) {
+	switch command[1] {
+		case "new":
+			if len(command) != 4 {
+				fmt.Fprintf(w, apiResponseMissingArguments)
+				return
+			}
+
+			gameID := command[3]
+			characterName := command[2]
+			maxHealth := 90
+			minHealth := 35
+			health := math_rand.Intn(maxHealth - minHealth)
+			var loadGame game
+			var loadGameCheck game
+			loadGameCheck = loadGame
+			selfServer.db.Find(&loadGame, "id = ?", gameID)
+			if reflect.DeepEqual(loadGame, loadGameCheck) {
+				log.Debug("game id not found:", gameID)
+				fmt.Fprintf(w, apiResponseGameIDNotFound)
+				return
+			}
+			newChar := &character{
+				Name:       characterName,
+				Game:       &loadGame,
+				Level:      1,
+				Health:     health,
+				MaxHealth:  health,
+				Experience: 0,
+			}
+			sessionUser.Characters = append(sessionUser.Characters, newChar)
+			selfServer.db.Save(&sessionUser)
+			fmt.Fprintf(w, apiResponseOk)
+			return
+
+		case "list":
+
+			var testUser user
+			selfServer.db.Preload("Characters").First(&testUser, "nick = ?", sessionUser.Nick)
+
+			var returnArray []string
+			for _, ga := range testUser.Characters {
+				returnArray = append(returnArray, ga.Name)
+			}
+
+			byteArray, err := json.Marshal(&returnArray)
+			if err != nil {
+				log.Debug(err)
+			}
+			fmt.Fprintf(w, string(byteArray))
+			return
 		}
-	case "game":
-		if bodyString[1] == "new" {
-			if len(bodyString) != 3 {
+}
+
+func gameCommandHandler (command []string,selfServer *Server,w http.ResponseWriter) {
+	switch command[1] {
+		case "new":
+			if len(command) != 3 {
 				fmt.Fprintf(w, apiResponseMissingArguments)
 				return
 			}
 			newGame := &game{
-				Name:       bodyString[2],
+				Name:       command[2],
 				InProgress: false,
 				GameField:  BoardParser(),
 			}
 			newGame.saveGameField()
 			selfServer.db.Create(&newGame)
 			log.Debug("game saved: ", newGame.Name)
+			fmt.Fprintf(w, apiResponseOk)
+			return
 
-		} else if bodyString[1] == "load" {
-			if len(bodyString) != 3 {
+		case "load":
+			if len(command) != 3 {
 				fmt.Fprintf(w, apiResponseMissingArguments)
 				return
 			}
@@ -174,7 +202,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			var err error
-			gameID, err := strconv.ParseUint(bodyString[2], 10, 32)
+			gameID, err := strconv.ParseUint(command[2], 10, 32)
 			if err != nil {
 				log.Debug("error thingy: ", err)
 			}
@@ -198,7 +226,7 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, apiResponseGameLoaded)
 			return
 
-		} else if bodyString[1] == "list" {
+		case "list":
 			var gameArray []game
 			selfServer.db.Find(&gameArray)
 			var returnArray []string
@@ -211,8 +239,8 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			fmt.Fprintf(w, string(byteArray))
 			return
-		} else if bodyString[1] == "join" {
-			if len(bodyString) != 2 {
+		case "join":
+			if len(command) != 2 {
 				fmt.Fprintf(w, apiResponseMissingArguments)
 				return
 			}
@@ -246,80 +274,42 @@ func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintf(w, apiResponseOk)
 				return
 			}
-
-		} else {
-			log.Debug("Unknown Command :", bodyString)
 		}
+}
+func (selfServer *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
+	session, err := selfServer.sessionStore.Get(r, "gogam-session")
+	if err != nil {
+		log.Debug("error creating session")
+	}
+
+	bodyBytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	bodyString := strings.Split(string(bodyBytes), " ")
+	log.Debug("recieved data :", bodyString)
+
+	val := session.Values["user"]
+	var sessionUser = &user{}
+	var ok bool
+	//authenticated := false
+	if sessionUser, ok = val.(*user); !ok {
+		log.Debug("not authenticated:", session.Values["user"])
+		fmt.Fprintf(w, apiResponseForbidden)
+		return
+	}
+	log.Debug("User authenticated:", sessionUser.Nick)
+	//authenticated = true
+
+	switch bodyString[0] {
+	case "user":
+		userCommandHandler (bodyString,selfServer,w);return
+	case "game":
+		gameCommandHandler (bodyString,selfServer,w);return
 	case "char":
-		if bodyString[1] == "new" {
-			if len(bodyString) != 4 {
-				fmt.Fprintf(w, apiResponseMissingArguments)
-				return
-			}
-
-			gameID := bodyString[3]
-			characterName := bodyString[2]
-			maxHealth := 90
-			minHealth := 35
-			health := math_rand.Intn(maxHealth - minHealth)
-			var loadGame game
-			var loadGameCheck game
-			loadGameCheck = loadGame
-			selfServer.db.Find(&loadGame, "id = ?", gameID)
-			if reflect.DeepEqual(loadGame, loadGameCheck) {
-				log.Debug("game id not found:", gameID)
-				fmt.Fprintf(w, apiResponseGameIDNotFound)
-				return
-			}
-			newChar := &character{
-				Name:       characterName,
-				Game:       &loadGame,
-				Level:      1,
-				Health:     health,
-				MaxHealth:  health,
-				Experience: 0,
-			}
-			sessionUser.Characters = append(sessionUser.Characters, newChar)
-			selfServer.db.Save(&sessionUser)
-
-		} else if bodyString[1] == "list" {
-
-			var testUser user
-			selfServer.db.Preload("Characters").First(&testUser, "nick = ?", sessionUser.Nick)
-
-			var returnArray []string
-			for _, ga := range testUser.Characters {
-				returnArray = append(returnArray, ga.Name)
-			}
-
-			byteArray, err := json.Marshal(&returnArray)
-			if err != nil {
-				log.Debug(err)
-			}
-			fmt.Fprintf(w, string(byteArray))
-			return
-
-			/*
-				for _,b := range testUser.Characters {
-					var testCharacter character
-					selfServer.db.Preload("Passives").Preload("Skills").First(&testCharacter, "name = ?", b.Name)
-					byteArray,err := json.Marshal(&testCharacter)
-					if err != nil {
-						log.Debug(err)
-					}
-					log.Debug(string(byteArray))
-			*/
-
-			//fmt.Fprintf(w, string(byteArray))
-
-			//selfServer.db.Find(&userChar, user{nick: 20})
-			//selfServer.db.Preload("Passives").Preload("Skills").First(&userChar, "name = ?", "player2")
-			//selfServer.db.Find(&userChar)
-
-		} else {
-			log.Debug("da is mal nix")
-
-		}
+		charCommandHandler (bodyString,selfServer,w,sessionUser);return
+		
 	}
 	fmt.Fprintf(w, apiResponseOk)
 }
