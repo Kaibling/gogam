@@ -28,7 +28,7 @@ jobs:
 
 addons:
   sonarcloud:
-    organization: "sonarcloud"
+    #organization: "sonarcloud"
     token: $SONAR_TOKEN
 cache:
   directories:
