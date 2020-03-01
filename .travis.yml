@@ -12,7 +12,7 @@ jobs:
         - ls
         - go test -json > report.json
         - go test -coverprofile=coverage.out
-        - sonar-scanner
+        - sonar-scanner -X
       os: 
         - linux
         - windows
