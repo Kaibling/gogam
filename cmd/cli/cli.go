@@ -146,9 +146,9 @@ func main() {
 	clientObject.sendCommand("game load 1")
 	//new character
 	clientObject.sendCommand("char new char1 1")
-	clientObject.sendCommand("char new char2 2")
+	//clientObject.sendCommand("char new char2 2")
 	//join game
-	clientObject.sendCommand("game join")
+	//clientObject.sendCommand("game join")
 
 	/*
 
