@@ -8,7 +8,7 @@ jobs:
       if: branch = master
       script: 
         #- go test ./... -v -covermode=count -coverprofile=coverage.out
-        #- $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci
+        - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci
         - ls
         - go test -json > report.json
         - go test -coverprofile=coverage.out
