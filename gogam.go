@@ -51,6 +51,10 @@ func (selfGameField *gameField) ShowMap() {
 	}
 }
 func (selfGameField *gameField) getStartPosition() (position, error) {
+	if selfGameField == nil {
+		return position{},errors.New("GameField not loaded from JSOn")
+	}
+	
 	if len(selfGameField.StartPoints) == 0 {
 		return position{}, errors.New("no Starting Points available")
 
@@ -68,7 +72,7 @@ type position struct {
 
 type game struct {
 	gorm.Model
-	Characters    []*character `gorm:"many2many:game_character;association_jointable_foreignkey:character_id"`
+	Characters    []*character  `gorm:"many2many:game_character;association_jointable_foreignkey:character_id"` //`gorm:"foreignkey:character_id"`
 	Name          string
 	GameField     *gameField
 	GameFiledJSON []byte
@@ -97,7 +101,7 @@ func (selfGame *game) addCharacter(character *character) {
 	selfGame.Characters = append(selfGame.Characters, character)
 	character.Position, err = selfGame.GameField.getStartPosition()
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 }
 

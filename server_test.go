@@ -321,6 +321,26 @@ func TestCharListWithExistingChar(t *testing.T) {
 
 }
 
+func TestCharStats(t *testing.T) {
+	//char new char1 0
+	res := httptest.NewRecorder()
+	testServer := new(Server)
+	testServer.initiateServer()
+
+	postRequestLoginHandler("admin", testServer, res)
+	postRequestGameHandler(testCommandNewGame+" world1", testServer, res)
+	postRequestGameHandler("char new char1 1", testServer, res)
+	content, _ := postRequestGameHandler("char stats 1", testServer, res)
+	expected := []string{"char1"}
+	contentStrngArray := strings.Split(string(content), " ")
+
+	if reflect.DeepEqual(contentStrngArray, expected) {
+		t.Errorf("Expected %s, got %s.", expected, string(content))
+	}
+	os.Remove("gogam.db")
+
+}
+
 /*
 func TestGameJoinNonloadedGame(t *testing.T) {
 	//char new char1 0

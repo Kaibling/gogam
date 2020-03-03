@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Kaibling/gogam"
+		"github.com/Kaibling/gogam"
 	log "github.com/sirupsen/logrus"
 )
 

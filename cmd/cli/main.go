@@ -25,6 +25,7 @@ func completer(d prompt.Document) []prompt.Suggest {
 		{Text: "user new", Description: "user new <username>: creates new user for the server"},     //working
 		{Text: "char new", Description: "char new <CharacterName> <gameID>: creates new Character"}, //working
 		{Text: "char list"},
+		{Text: "char stats", Description: "char stats <CharacterID>: shows stats and info of char"},
 		{Text: "game load", Description: "game load <gameID>: loads game into server"}, //working
 		{Text: "game start"},
 		{Text: "game join", Description: "game join: joins game"},
@@ -141,11 +142,14 @@ func main() {
 	clientObject.login("admin")
 	//create new game
 	clientObject.sendCommand("game new welt1")
-	clientObject.sendCommand("game new welt2")
+	//clientObject.sendCommand("game new welt2")
 	//load new game
-	clientObject.sendCommand("game load 1")
+	//clientObject.sendCommand("game load 1")
 	//new character
 	clientObject.sendCommand("char new char1 1")
+	//clientObject.sendCommand("char new char2 1")
+	//clientObject.sendCommand("char stats 1")
+
 	//clientObject.sendCommand("char new char2 2")
 	//join game
 	//clientObject.sendCommand("game join")

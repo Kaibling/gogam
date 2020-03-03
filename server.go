@@ -139,6 +139,7 @@ func charCommandHandler (command []string,selfServer *Server,w http.ResponseWrit
 				fmt.Fprintf(w, apiResponseGameIDNotFound)
 				return
 			}
+			loadGame.loadGameField()
 			newChar := &character{
 				Name:       characterName,
 				Game:       &loadGame,
@@ -147,7 +148,14 @@ func charCommandHandler (command []string,selfServer *Server,w http.ResponseWrit
 				MaxHealth:  health,
 				Experience: 0,
 			}
+			//todo game
+
+			loadGame.addCharacter(newChar)
+			selfServer.db.Create(&newChar)
 			sessionUser.Characters = append(sessionUser.Characters, newChar)
+
+			//db.Model(&user).Related(&card)
+			//log.Info(toJSON(sessionUser))
 			selfServer.db.Save(&sessionUser)
 			fmt.Fprintf(w, apiResponseOk)
 			return
@@ -168,6 +176,42 @@ func charCommandHandler (command []string,selfServer *Server,w http.ResponseWrit
 			}
 			fmt.Fprintf(w, string(byteArray))
 			return
+		case "stats":
+
+			//var testUser user
+			//selfServer.db.Preload("Characters").First(&testUser, "nick = ?", sessionUser.Nick)
+			// char id
+			// name
+			//level
+			//health/max health
+			//exp
+			//game
+			//passives
+			//skills
+			var resultChar character
+			selfServer.db.Table("Characters").
+			Joins("join user_character on user_character.character_id = characters.id").
+			Joins("join users on user_character.user_id = users.id").
+			//Joins("join user_character on user_character.character_id = characters.id").
+			//Joins("join users on user_character.user_id = users.id").
+			Where("users.id = ?", "1").Find(&resultChar)
+		
+			/*
+			record := &struct{ ID uint }{}
+			selfServer.db.Debug().Table("users").
+				Select("character.id").
+				Joins("join user_character on user_character.user_id = user.id").
+				Joins("join characters on user_character.character_id = characters.id").
+				Joins("join game_character on game_character.character_id = characters.id").
+				Joins("join games on game_character.character_id = characters.id").
+				Where("game.id = ?", selfServer.game.ID).Scan(record)
+			*/
+			
+			//log.Info(toJSON((resultChar)))
+
+			fmt.Fprintf(w, apiResponseOk)
+			return
+
 		}
 }
 
