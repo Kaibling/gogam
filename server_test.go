@@ -38,9 +38,19 @@ func postRequestGameHandler(command string, testServer *GameServer, res *httptes
 }
 */
 
+	type requestJSON struct {
+		Username string  `json:"username"`
+	}
+	type requestGameJSON struct {
+		GameName	string  `json:"gameName"`
+		Command 	string `json:"command"`
+		GameID 		string `json:"gameID"`
+	}
+
 func requestThingy(requestBody []byte, testServer *GameServer, res *httptest.ResponseRecorder,url string, method string) (*httptest.ResponseRecorder,*http.Request)  {
 	a := bytes.NewBuffer(requestBody)
 	req, _ := http.NewRequest(method, url, a)
+	//log.Debug("Cookie:s",len(res.Result().Cookies()))
 	if len(res.Result().Cookies()) > 0 {
 		req.AddCookie(res.Result().Cookies()[0])
 	}
@@ -97,11 +107,6 @@ func TestUserNewUnauthenticated(t *testing.T) {
 func TestLoginSuccess(t *testing.T) {
 
 	//log.SetLevel(log.DebugLevel)
-
-	type requestJSON struct {
-		Username string  `json:"username"`
-	}
-
 	res := httptest.NewRecorder()
 	testServer := new(GameServer)
 	testServer.initiateServer()
@@ -143,7 +148,20 @@ func TestUserNewMalformedJson(t *testing.T) {
 	testServer.initiateServer()
 
 
-	var req *http.Request
+	stringJSON := requestJSON{Username: "admin"}
+	byteJSON,err := json.Marshal(stringJSON)
+		if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	req, _ := http.NewRequest(http.MethodPost, "login", bytes.NewBuffer(byteJSON))
+	testServer.loginHandler(res, req)
+	log.Debug("-> Cookies:",len(res.Result().Cookies()))
+	if len(res.Result().Cookies()) > 0 {
+		req.AddCookie(res.Result().Cookies()[0])
+	}
+	ioutil.ReadAll(res.Body)
+
 	res,req = requestThingy([]byte("aaa"), testServer, res,"/user", http.MethodPut)
 	testServer.userHandler(res, req)
 
@@ -171,20 +189,20 @@ func TestUserNewauthenticated(t *testing.T) {
 	testServer := new(GameServer)
 	testServer.initiateServer()
 
-	type requestJSON struct {
-		Username string  `json:"username"`
-	}
-
 	stringJSON := requestJSON{Username: "admin"}
 	byteJSON,err := json.Marshal(stringJSON)
 		if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	var req *http.Request
-	res,req = requestThingy(byteJSON, testServer, res,"/login", http.MethodPost)
+	req, _ := http.NewRequest(http.MethodPost, "login", bytes.NewBuffer(byteJSON))
 	testServer.loginHandler(res, req)
+	log.Debug("-> Cookies:",len(res.Result().Cookies()))
+	if len(res.Result().Cookies()) > 0 {
+		req.AddCookie(res.Result().Cookies()[0])
+	}
 	ioutil.ReadAll(res.Body)
+
 
 	stringJSON = requestJSON{Username: "hans"}
 	byteJSON,err = json.Marshal(stringJSON)
@@ -220,25 +238,18 @@ func TestNewGameUnautheticated(t *testing.T) {
 	testServer := new(GameServer)
 	testServer.initiateServer()
 
-	type requestJSON struct {
-		Username string  `json:"username"`
-	}
-	type requestGameJSON struct {
-		GameName	string  `json:"gameName"`
-		Command 	string `json:"command"`
-		GameID 		string `json:"gameID"`
-	}
-
-	stringJSON := requestJSON{Username: "admin"}
+	stringJSON := requestJSON{Username: "admn"}
 	byteJSON,err := json.Marshal(stringJSON)
 		if err != nil {
 		t.Errorf(err.Error())
 	}
-	var req *http.Request
-	res,req = requestThingy(byteJSON, testServer, res,"/login", http.MethodPost)
-	testServer.loginHandler(res, req)
-	ioutil.ReadAll(res.Body)
 
+	req, _ := http.NewRequest(http.MethodPost, "login", bytes.NewBuffer(byteJSON))
+	testServer.loginHandler(res, req)
+	if len(res.Result().Cookies()) > 0 {
+		req.AddCookie(res.Result().Cookies()[0])
+	}
+	ioutil.ReadAll(res.Body)
 
 	gameStringJSON := requestGameJSON{GameName: "GameNAmemitid1"}
 	byteJSON,err = json.Marshal(gameStringJSON)
@@ -246,14 +257,17 @@ func TestNewGameUnautheticated(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	res,req = requestThingy(byteJSON, testServer, res,"/game", http.MethodPut)
+	req, _ = http.NewRequest(http.MethodPut, "game", bytes.NewBuffer(byteJSON))
 	testServer.gameHandler(res, req)
+	if len(res.Result().Cookies()) > 0 {
+		req.AddCookie(res.Result().Cookies()[0])
+	}
 	content,err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	expectedContent := newReturnMessage(200,"OK")
+	expectedContent := newReturnMessage(403,"not allowed")
 	var recieveMessage returnJSONMessage
 	err = json.Unmarshal(content,&recieveMessage)
 	if err != nil {
@@ -266,29 +280,22 @@ func TestNewGameUnautheticated(t *testing.T) {
 }
 
 
-func TestNewGameautheticatednoGameID(t *testing.T) {
-	log.SetLevel(log.DebugLevel)
+func TestNewGameautheticated(t *testing.T) {
+	//log.SetLevel(log.DebugLevel)
 	res := httptest.NewRecorder()
 	testServer := new(GameServer)
 	testServer.initiateServer()
 
-	type requestJSON struct {
-		Username string  `json:"username"`
-	}
-	type requestGameJSON struct {
-		GameName	string  `json:"gameName"`
-		Command 	string `json:"command"`
-		GameID 		string `json:"gameID"`
-	}
-
 	stringJSON := requestJSON{Username: "admin"}
 	byteJSON,err := json.Marshal(stringJSON)
 		if err != nil {
 		t.Errorf(err.Error())
 	}
-	var req *http.Request
-	res,req = requestThingy(byteJSON, testServer, res,"/login", http.MethodPost)
+	req, _ := http.NewRequest(http.MethodPost, "login", bytes.NewBuffer(byteJSON))
 	testServer.loginHandler(res, req)
+	if len(res.Result().Cookies()) > 0 {
+		req.AddCookie(res.Result().Cookies()[0])
+	}
 	ioutil.ReadAll(res.Body)
 
 
@@ -316,23 +323,8 @@ func TestNewGameautheticatednoGameID(t *testing.T) {
 	}
 	os.Remove("gogam.db")
 }
+
 /*
-func TestNewGameautheticatednewGame(t *testing.T) {
-	//test game new world1
-	res := httptest.NewRecorder()
-	testServer := new(GameServer)
-	testServer.initiateServer()
-
-	postRequestLoginHandler("admin", testServer, res)
-
-	content, _ := postRequestGameHandler(testCommandNewGame+" world1", testServer, res)
-	expected := "OK"
-	if string(content) != expected {
-		t.Errorf("Expected %s, got %s.", expected, string(content))
-	}
-	os.Remove("gogam.db")
-}
-
 func TestGameLoadNonExistingGame(t *testing.T) {
 
 	//test game new world1

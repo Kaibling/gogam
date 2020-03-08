@@ -41,10 +41,17 @@ func completer(d prompt.Document) []prompt.Suggest {
 }
 
 func (selfclientCli *clientCli) login(username string) (error) {
+		type requestJSON struct {
+		Username string  `json:"username"`
+	}
 
-	data := []byte(username)
-	fmt.Println(selfclientCli.url + "login")
-	response, err := gogam.PostRequest(selfclientCli.url+"login", data, selfclientCli.jar)
+	stringJSON := requestJSON{Username:username}
+	byteJSON,err := json.Marshal(stringJSON)
+		if err != nil {
+		log.Debug(err.Error())
+	}
+
+	response, err := gogam.PostRequest(selfclientCli.url+"login", byteJSON, selfclientCli.jar)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -172,11 +179,17 @@ func main() {
 	clientObject.url = "http://localhost:7070/"
 	//fmt.Println("preload finished")
 
+	err = clientObject.login("admin")
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	err = clientObject.createUser("hans")
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = clientObject.login("han")
+
+	err = clientObject.login("hans")
 	if err != nil {
 		fmt.Println(err)
 	}

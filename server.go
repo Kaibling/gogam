@@ -83,7 +83,10 @@ func (selfGameServer *GameServer) initDB() {
 
 func (selfGameServer *GameServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 
-	var data map[string]interface{}
+	type requestJSON struct {
+		Username string  `json:"username"`
+	}
+	var data requestJSON
 	body, readErr := ioutil.ReadAll(r.Body)
 	if readErr != nil {
 		log.Fatal(readErr)
@@ -96,7 +99,7 @@ func (selfGameServer *GameServer) loginHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	username := data["username"]
+	username := data.Username
 	var loginUser user
 
 	selfGameServer.db.First(&loginUser, "nick = ?", username)
@@ -110,12 +113,17 @@ func (selfGameServer *GameServer) loginHandler(w http.ResponseWriter, r *http.Re
 
 	log.Debug("user loaded from db :", username)
 	session, err := selfGameServer.sessionStore.Get(r, "gogam-session")
+	if err != nil {
+		log.Debug("Error creating session:", err)
+	}
 	session.Values["user"] = loginUser
-	log.Debug("Saved user :", username, " in Seesions")
+
 	err = session.Save(r, w)
 	if err != nil {
-		log.Debug("Erros saving user to session:", err)
+		log.Debug("Error saving user to session:", err)
 	}
+
+	log.Debug("Saved user: ", loginUser.Nick, " in Sessions")
 	http.Error(w, newReturnMessage(http.StatusOK,apiResponseOk).toString() , http.StatusOK)
 }
 
@@ -218,13 +226,30 @@ func charCommandHandler (command []string,selfGameServer *GameServer,w http.Resp
 
 func (selfGameServer *GameServer) userHandler (w http.ResponseWriter, r *http.Request) {
 
+
+	session, err := selfGameServer.sessionStore.Get(r, "gogam-session")
+	if err != nil {
+		log.Debug("error creating session")
+	}
+	log.Debug(session.Values["user"])
+
+	val := session.Values["user"]
+	var sessionUser = &user{}
+	var ok bool
+	if sessionUser, ok = val.(*user); !ok {
+		log.Debug("not authenticated:", session.Values["user"])
+		http.Error(w, newReturnMessage(http.StatusForbidden,apiResponseForbidden).toString() , http.StatusForbidden)
+		return
+	}
+	log.Debug("User authenticated:", sessionUser.Nick)
+
 	var data map[string]interface{}
 	body, readErr := ioutil.ReadAll(r.Body)
 	if readErr != nil {
 		log.Fatal(readErr)
 	}
 	log.Debug("request:",string(body))
-    err := json.Unmarshal(body, &data)
+    err = json.Unmarshal(body, &data)
     if err != nil {
 		log.Warn("Not a valid JSON struct",string(body))
 		http.Error(w, newReturnMessage(http.StatusBadRequest,apiResponseMalformedJSON).toString() , http.StatusBadRequest)
@@ -269,6 +294,21 @@ func (selfGameServer *GameServer) userHandler (w http.ResponseWriter, r *http.Re
 
 func (selfGameServer *GameServer) charHandler (w http.ResponseWriter, r *http.Request) {
 
+	session, err := selfGameServer.sessionStore.Get(r, "gogam-session")
+	if err != nil {
+		log.Debug("error creating session")
+	}
+	log.Debug(session.Values["user"])
+
+	val := session.Values["user"]
+	var sessionUser = &user{}
+	var ok bool
+	if sessionUser, ok = val.(*user); !ok {
+		log.Debug("not authenticated:", session.Values["user"])
+		http.Error(w, newReturnMessage(http.StatusForbidden,apiResponseForbidden).toString() , http.StatusForbidden)
+		return
+	}
+	log.Debug("User authenticated:", sessionUser.Nick)
 	var data map[string]interface{}
 	
 	body, readErr := ioutil.ReadAll(r.Body)
@@ -276,7 +316,7 @@ func (selfGameServer *GameServer) charHandler (w http.ResponseWriter, r *http.Re
 		log.Fatal(readErr)
 	}
 	log.Debug("request:",string(body))
-    err := json.Unmarshal(body, &data)
+    err = json.Unmarshal(body, &data)
     if err != nil {
         panic(err)
 	}
@@ -324,11 +364,26 @@ func (selfGameServer *GameServer) charHandler (w http.ResponseWriter, r *http.Re
 }
 
 func (selfGameServer *GameServer) gameHandler(w http.ResponseWriter, r *http.Request) {
+
+	session, err := selfGameServer.sessionStore.Get(r, "gogam-session")
+	if err != nil {
+		log.Debug("error creating session")
+	}
+
+	val := session.Values["user"]
+	var sessionUser = &user{}
+	var ok bool
+	if sessionUser, ok = val.(*user); !ok {
+		log.Debug("not authenticated:", session.Values["user"])
+		http.Error(w, newReturnMessage(http.StatusForbidden,apiResponseForbidden).toString() , http.StatusForbidden)
+		return
+	}
+	log.Debug("User authenticated:", sessionUser.Nick)
+
 	type requestObject struct {
 		GameName 	string `json:"gameName"`
 		Command 	string `json:"command"`
 		GameID 		string `json:"gameID"`
-
 	}
 
 	var data requestObject
@@ -337,7 +392,7 @@ func (selfGameServer *GameServer) gameHandler(w http.ResponseWriter, r *http.Req
 		log.Fatal(readErr)
 	}
 	log.Debug("request:",string(body))
-    err := json.Unmarshal(body, &data)
+    err = json.Unmarshal(body, &data)
     if err != nil {
 		log.Warn("Not a valid JSON struct",string(body))
 		http.Error(w, newReturnMessage(http.StatusBadRequest,apiResponseMalformedJSON).toString() , http.StatusBadRequest)
