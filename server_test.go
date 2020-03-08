@@ -1,16 +1,21 @@
 package gogam
 
 import (
-	"io/ioutil"
-	"strings"
-	//log "github.com/sirupsen/logrus"
-	"bytes"
 	"encoding/json"
+	"io/ioutil"
+	//"strings"
+	"bytes"
+
+	log "github.com/sirupsen/logrus"
+
+	//"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"reflect"
+
+	//"reflect"
 	"testing"
+	//"net/http/cookiejar"
 )
 
 /*
@@ -20,7 +25,8 @@ import (
 var testCommandNewGame = "game new"
 var testCommandGameLoad = "game load"
 
-func postRequestGameHandler(command string, testServer *Server, res *httptest.ResponseRecorder) ([]byte, error) {
+/*
+func postRequestGameHandler(command string, testServer *GameServer, res *httptest.ResponseRecorder) ([]byte, error) {
 	a := bytes.NewBuffer([]byte(command))
 	req, _ := http.NewRequest("POST", "/game", a)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -30,8 +36,18 @@ func postRequestGameHandler(command string, testServer *Server, res *httptest.Re
 	testServer.gameHandler(res, req)
 	return ioutil.ReadAll(res.Body)
 }
+*/
 
-func postRequestLoginHandler(command string, testServer *Server, res *httptest.ResponseRecorder) ([]byte, error) {
+func requestThingy(requestBody []byte, testServer *GameServer, res *httptest.ResponseRecorder,url string, method string) (*httptest.ResponseRecorder,*http.Request)  {
+	a := bytes.NewBuffer(requestBody)
+	req, _ := http.NewRequest(method, url, a)
+	if len(res.Result().Cookies()) > 0 {
+		req.AddCookie(res.Result().Cookies()[0])
+	}
+	return res,req
+}
+
+func postRequestLoginHandler(command string, testServer *GameServer, res *httptest.ResponseRecorder) ([]byte, error) {
 	a := bytes.NewBuffer([]byte(command))
 	req, _ := http.NewRequest("POST", "/login", a)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -39,52 +55,216 @@ func postRequestLoginHandler(command string, testServer *Server, res *httptest.R
 	return ioutil.ReadAll(res.Body)
 }
 
-func TestLoginFailing(t *testing.T) {
+func TestUserNewUnauthenticated(t *testing.T) {
+
+	//log.SetLevel(log.DebugLevel)
+
+	type requestJSON struct {
+		Username string  `json:"username"`
+	}
 
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
-	content, _ := postRequestLoginHandler("aasd", testServer, res)
-	expected := "ynogo"
-	if string(content) != expected {
-		t.Errorf("Expected %s, got %s.", expected, string(content))
+	stringJSON := requestJSON{Username: "asd"}
+	byteJSON,err := json.Marshal(stringJSON)
+		if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	var req *http.Request
+	res,req = requestThingy(byteJSON, testServer, res,"/login", http.MethodPost)
+	testServer.loginHandler(res, req)
+
+	content,err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	expectedContent := newReturnMessage(401,"not authenticated")
+	var recieveMessage returnJSONMessage
+	err = json.Unmarshal(content,&recieveMessage)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if recieveMessage != *expectedContent {
+		t.Errorf("Expected %s, got %s.", expectedContent.toString(), recieveMessage.toString())
 	}
 	os.Remove("gogam.db")
 }
 
 func TestLoginSuccess(t *testing.T) {
 
+	//log.SetLevel(log.DebugLevel)
+
+	type requestJSON struct {
+		Username string  `json:"username"`
+	}
+
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
-	content, _ := postRequestLoginHandler("admin", testServer, res)
-	expected := "OK"
-	if string(content) != expected {
-		t.Errorf("Expected %s, got %s.", expected, string(content))
+	stringJSON := requestJSON{Username: "admin"}
+	byteJSON,err := json.Marshal(stringJSON)
+		if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	var req *http.Request
+	res,req = requestThingy(byteJSON, testServer, res,"/login", http.MethodPost)
+	testServer.loginHandler(res, req)
+
+	content,err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+
+	expectedContent := newReturnMessage(200,"OK")
+	var recieveMessage returnJSONMessage
+	err = json.Unmarshal(content,&recieveMessage)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if recieveMessage != *expectedContent {
+		t.Errorf("Expected %s, got %s.", expectedContent.toString(), recieveMessage.toString())
 	}
 	os.Remove("gogam.db")
 }
 
-func TestNewGameUnautheticated(t *testing.T) {
+func TestUserNewMalformedJson(t *testing.T) {
+
 	//log.SetLevel(log.DebugLevel)
+	//test user new user1
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
+
+	var req *http.Request
+	res,req = requestThingy([]byte("aaa"), testServer, res,"/user", http.MethodPut)
+	testServer.userHandler(res, req)
+
+	content,err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	expectedContent := newReturnMessage(400,"malformed request")
+	var recieveMessage returnJSONMessage
+	err = json.Unmarshal(content,&recieveMessage)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if recieveMessage != *expectedContent {
+		t.Errorf("Expected %s, got %s.", expectedContent.toString(), recieveMessage.toString())
+	}
+	os.Remove("gogam.db")
+}
+
+func TestUserNewauthenticated(t *testing.T) {
+	//log.SetLevel(log.DebugLevel)
+	//test user new user1
+	res := httptest.NewRecorder()
+	testServer := new(GameServer)
+	testServer.initiateServer()
+
+	type requestJSON struct {
+		Username string  `json:"username"`
+	}
+
+	stringJSON := requestJSON{Username: "admin"}
+	byteJSON,err := json.Marshal(stringJSON)
+		if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	var req *http.Request
+	res,req = requestThingy(byteJSON, testServer, res,"/login", http.MethodPost)
+	testServer.loginHandler(res, req)
+	ioutil.ReadAll(res.Body)
+
+	stringJSON = requestJSON{Username: "hans"}
+	byteJSON,err = json.Marshal(stringJSON)
+		if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	res,req = requestThingy(byteJSON, testServer, res,"/user", http.MethodPut)
+	testServer.userHandler(res, req)
+
+	content,err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	expectedContent := newReturnMessage(201,"")
+	var recieveMessage returnJSONMessage
+	err = json.Unmarshal(content,&recieveMessage)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if recieveMessage != *expectedContent {
+		t.Errorf("Expected %s, got %s.", expectedContent.toString(), recieveMessage.toString())
+	}
+	os.Remove("gogam.db")
+}
+
+
+
+func TestNewGameUnautheticated(t *testing.T) {
+	log.SetLevel(log.DebugLevel)
+	res := httptest.NewRecorder()
+	testServer := new(GameServer)
+	testServer.initiateServer()
+
+	type requestJSON struct {
+		Username string  `json:"username"`
+	}
+	type requestGameJSON struct {
+		GameName string  `json:"gameName"`
+	}
+
+	stringJSON := requestJSON{Username: "admin"}
+	byteJSON,err := json.Marshal(stringJSON)
+		if err != nil {
+		t.Errorf(err.Error())
+	}
+	var req *http.Request
+	res,req = requestThingy(byteJSON, testServer, res,"/login", http.MethodPost)
+	testServer.loginHandler(res, req)
+	ioutil.ReadAll(res.Body)
+
+
+	gameStringJSON := requestGameJSON{GameName: "GameNAmemitid1"}
+	byteJSON,err = json.Marshal(gameStringJSON)
+		if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	res,req = requestThingy(byteJSON, testServer, res,"/game", http.MethodPost)
+	testServer.gameHandler(res, req)
+	content,err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
 	//test game new (unauthenticated)
-	content, _ := postRequestGameHandler(testCommandGameLoad+" 1", testServer, res)
+	//content, _ := postRequestGameHandler(testCommandGameLoad+" 1", testServer, res)
 	expected := "ynogo"
 	if string(content) != expected {
 		t.Errorf("Expected %s, got %s.", expected, string(content))
 	}
 	os.Remove("gogam.db")
 }
+
+/*
 func TestNewGameautheticatednoGameID(t *testing.T) {
 	//test game new
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -100,7 +280,7 @@ func TestNewGameautheticatednoGameID(t *testing.T) {
 func TestNewGameautheticatednewGame(t *testing.T) {
 	//test game new world1
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -117,7 +297,7 @@ func TestGameLoadNonExistingGame(t *testing.T) {
 
 	//test game new world1
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	//login/get session
@@ -135,7 +315,7 @@ func TestGameLoadNonExistingGame(t *testing.T) {
 func TestGameLoadExistingGame(t *testing.T) {
 	//test game new world1
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -153,7 +333,7 @@ func TestGameLoadExistingGameTwice(t *testing.T) {
 	//log.SetLevel(log.DebugLevel)
 	//test game new world1
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -169,41 +349,13 @@ func TestGameLoadExistingGameTwice(t *testing.T) {
 	//log.SetLevel(log.InfoLevel)
 }
 
-func TestUserNewUnauthenticated(t *testing.T) {
-	//test user new user1
-	res := httptest.NewRecorder()
-	testServer := new(Server)
-	testServer.initiateServer()
 
-	content, _ := postRequestGameHandler("user new user1", testServer, res)
-	expected := "ynogo"
-	if string(content) != expected {
-		t.Errorf("Expected %s, got %s.", expected, string(content))
-	}
-	os.Remove("gogam.db")
-}
-
-func TestUserNewauthenticated(t *testing.T) {
-	//test user new user1
-	res := httptest.NewRecorder()
-	testServer := new(Server)
-	testServer.initiateServer()
-
-	postRequestLoginHandler("admin", testServer, res)
-
-	content, _ := postRequestGameHandler("user new user1", testServer, res)
-	expected := "OK"
-	if string(content) != expected {
-		t.Errorf("Expected %s, got %s.", expected, string(content))
-	}
-	os.Remove("gogam.db")
-}
 
 func TestGameListNoExistingGames(t *testing.T) {
 	//log.SetLevel(log.DebugLevel)
 	//test game list
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -225,7 +377,7 @@ func TestGameListTwoGames(t *testing.T) {
 
 	//test game list
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -249,7 +401,7 @@ func TestCharNewWithoutGame(t *testing.T) {
 
 	//char new char1 0
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -267,7 +419,7 @@ func TestCharNewWithoutGame(t *testing.T) {
 func TestCharNewwithExistingGame(t *testing.T) {
 	//char new char1 0
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -286,7 +438,7 @@ func TestCharNewwithExistingGame(t *testing.T) {
 func TestCharListWithoutExistingChar(t *testing.T) {
 	//char new char1 0
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -304,7 +456,7 @@ func TestCharListWithoutExistingChar(t *testing.T) {
 func TestCharListWithExistingChar(t *testing.T) {
 	//char new char1 0
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -324,7 +476,7 @@ func TestCharListWithExistingChar(t *testing.T) {
 func TestCharStats(t *testing.T) {
 	//char new char1 0
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -345,7 +497,7 @@ func TestCharStats(t *testing.T) {
 func TestGameJoinNonloadedGame(t *testing.T) {
 	//char new char1 0
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -364,7 +516,7 @@ func TestGameJoinNonloadedGame(t *testing.T) {
 func TestGameJoinLoadedGame(t *testing.T) {
 	//char new char1 0
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -384,7 +536,7 @@ func TestGameJoinLoadedGame(t *testing.T) {
 func TestGameJoinLoadedGameWithoutChar(t *testing.T) {
 	//char new char1 0
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)
@@ -403,7 +555,7 @@ func TestGameJoinLoadedGameWithoutChar(t *testing.T) {
 func TestGameJoinLoadedGameWithWrongChar(t *testing.T) {
 	//char new char1 0
 	res := httptest.NewRecorder()
-	testServer := new(Server)
+	testServer := new(GameServer)
 	testServer.initiateServer()
 
 	postRequestLoginHandler("admin", testServer, res)

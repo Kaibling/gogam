@@ -2,5 +2,4 @@ vscode:
   extensions:
     - alexcvzz.vscode-sqlite@0.8.1:PQywmjPo5CPnGuwRSsyeiw==
 tasks:
-  - command: mkdir -p /home/gitpod/go/src/github.com/Kaibling/
-  - command: ln -s /workspace/gogam /home/gitpod/go/src/github.com/Kaibling/
+  - command: mkdir -p /home/gitpod/go/src/github.com/Kaibling/;ln -s /workspace/gogam /home/gitpod/go/src/github.com/Kaibling/;

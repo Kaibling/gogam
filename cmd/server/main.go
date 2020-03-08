@@ -13,7 +13,7 @@ func main() {
 	//gogam.ShowMap(*board)
 	//log.Println((*board)[0][0])
 
-	server := new(gogam.Server)
+	server := new(gogam.GameServer)
 	server.StartServer()
 
 }
