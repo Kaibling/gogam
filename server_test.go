@@ -215,7 +215,7 @@ func TestUserNewauthenticated(t *testing.T) {
 
 
 func TestNewGameUnautheticated(t *testing.T) {
-	log.SetLevel(log.DebugLevel)
+	//log.SetLevel(log.DebugLevel)
 	res := httptest.NewRecorder()
 	testServer := new(GameServer)
 	testServer.initiateServer()
@@ -224,7 +224,9 @@ func TestNewGameUnautheticated(t *testing.T) {
 		Username string  `json:"username"`
 	}
 	type requestGameJSON struct {
-		GameName string  `json:"gameName"`
+		GameName	string  `json:"gameName"`
+		Command 	string `json:"command"`
+		GameID 		string `json:"gameID"`
 	}
 
 	stringJSON := requestJSON{Username: "admin"}
@@ -244,39 +246,77 @@ func TestNewGameUnautheticated(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	res,req = requestThingy(byteJSON, testServer, res,"/game", http.MethodPost)
+	res,req = requestThingy(byteJSON, testServer, res,"/game", http.MethodPut)
 	testServer.gameHandler(res, req)
 	content,err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	//test game new (unauthenticated)
-	//content, _ := postRequestGameHandler(testCommandGameLoad+" 1", testServer, res)
-	expected := "ynogo"
-	if string(content) != expected {
-		t.Errorf("Expected %s, got %s.", expected, string(content))
+	expectedContent := newReturnMessage(200,"OK")
+	var recieveMessage returnJSONMessage
+	err = json.Unmarshal(content,&recieveMessage)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if recieveMessage != *expectedContent {
+		t.Errorf("Expected %s, got %s.", expectedContent.toString(), recieveMessage.toString())
 	}
 	os.Remove("gogam.db")
 }
 
-/*
+
 func TestNewGameautheticatednoGameID(t *testing.T) {
-	//test game new
+	log.SetLevel(log.DebugLevel)
 	res := httptest.NewRecorder()
 	testServer := new(GameServer)
 	testServer.initiateServer()
 
-	postRequestLoginHandler("admin", testServer, res)
+	type requestJSON struct {
+		Username string  `json:"username"`
+	}
+	type requestGameJSON struct {
+		GameName	string  `json:"gameName"`
+		Command 	string `json:"command"`
+		GameID 		string `json:"gameID"`
+	}
 
-	content, _ := postRequestGameHandler(testCommandNewGame, testServer, res)
-	expected := "not enough arguments"
-	if string(content) != expected {
-		t.Errorf("Expected %s, got %s.", expected, string(content))
+	stringJSON := requestJSON{Username: "admin"}
+	byteJSON,err := json.Marshal(stringJSON)
+		if err != nil {
+		t.Errorf(err.Error())
+	}
+	var req *http.Request
+	res,req = requestThingy(byteJSON, testServer, res,"/login", http.MethodPost)
+	testServer.loginHandler(res, req)
+	ioutil.ReadAll(res.Body)
+
+
+	gameStringJSON := requestGameJSON{GameName: "GameNAmemitid1"}
+	byteJSON,err = json.Marshal(gameStringJSON)
+		if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	res,req = requestThingy(byteJSON, testServer, res,"/game", http.MethodPut)
+	testServer.gameHandler(res, req)
+	content,err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	expectedContent := newReturnMessage(200,"OK")
+	var recieveMessage returnJSONMessage
+	err = json.Unmarshal(content,&recieveMessage)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if recieveMessage != *expectedContent {
+		t.Errorf("Expected %s, got %s.", expectedContent.toString(), recieveMessage.toString())
 	}
 	os.Remove("gogam.db")
 }
-
+/*
 func TestNewGameautheticatednewGame(t *testing.T) {
 	//test game new world1
 	res := httptest.NewRecorder()

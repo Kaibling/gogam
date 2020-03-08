@@ -14,3 +14,11 @@ Login
 /Login
 method: "POST"
 json: {"username": <username>}
+
+game
+/game
+method: "POST"
+json: {"gamename": <gamename>}
+
+method: "PUT"
+json: {"gamename": <gamename>}

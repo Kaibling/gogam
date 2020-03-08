@@ -117,8 +117,6 @@ func (selfGameServer *GameServer) loginHandler(w http.ResponseWriter, r *http.Re
 		log.Debug("Erros saving user to session:", err)
 	}
 	http.Error(w, newReturnMessage(http.StatusOK,apiResponseOk).toString() , http.StatusOK)
-
-
 }
 
 func charCommandHandler (command []string,selfGameServer *GameServer,w http.ResponseWriter,sessionUser *user) {
@@ -218,11 +216,9 @@ func charCommandHandler (command []string,selfGameServer *GameServer,w http.Resp
 }
 
 
-
 func (selfGameServer *GameServer) userHandler (w http.ResponseWriter, r *http.Request) {
 
 	var data map[string]interface{}
-	
 	body, readErr := ioutil.ReadAll(r.Body)
 	if readErr != nil {
 		log.Fatal(readErr)
@@ -237,7 +233,7 @@ func (selfGameServer *GameServer) userHandler (w http.ResponseWriter, r *http.Re
 	var message string
 	returnStatusCode := http.StatusInternalServerError
 
-		switch r.Method {
+	switch r.Method {
 		case http.MethodPut:
 			if data["username"] == nil {
 				message = "username is missing"
@@ -325,6 +321,91 @@ func (selfGameServer *GameServer) charHandler (w http.ResponseWriter, r *http.Re
 		returnMessage := &returnJSONMessage{ Message: message,StatusCode:returnStatusCode}
 		fmt.Fprintf(w,returnMessage.toString())
 		
+}
+
+func (selfGameServer *GameServer) gameHandler(w http.ResponseWriter, r *http.Request) {
+	type requestObject struct {
+		GameName 	string `json:"gameName"`
+		Command 	string `json:"command"`
+		GameID 		string `json:"gameID"`
+
+	}
+
+	var data requestObject
+	body, readErr := ioutil.ReadAll(r.Body)
+	if readErr != nil {
+		log.Fatal(readErr)
+	}
+	log.Debug("request:",string(body))
+    err := json.Unmarshal(body, &data)
+    if err != nil {
+		log.Warn("Not a valid JSON struct",string(body))
+		http.Error(w, newReturnMessage(http.StatusBadRequest,apiResponseMalformedJSON).toString() , http.StatusBadRequest)
+		return
+	}
+	message := ""
+	returnStatusCode := http.StatusInternalServerError
+
+	switch r.Method {
+		case http.MethodPut:
+			newGame := &game{
+				Name:       data.GameName,
+				InProgress: false,
+				GameField:  BoardParser(),
+			}
+			newGame.saveGameField()
+			selfGameServer.db.Create(&newGame)
+			log.Debug("game saved: ", newGame.Name)
+			message = apiResponseOk
+			returnStatusCode = http.StatusOK
+			break
+		case http.MethodPost:
+			if data.Command == "" {
+				message = apiResponseMissingArguments
+				returnStatusCode = http.StatusBadRequest
+				break
+			}
+			switch data.Command {
+			case "load": 
+				if selfGameServer.game != nil {
+					//game loaded
+					log.Debug("game already loaded")
+					fmt.Fprintf(w, apiResponseGameLoaded)
+					return
+				}
+				var err error
+				log.Debug("loading game :", data.GameID)
+				var loadGame game
+				var loadGameCheck game
+				loadGameCheck = loadGame
+				selfGameServer.db.Preload("Characters").Find(&loadGame, "id = ?", data.GameID)
+				if reflect.DeepEqual(loadGame, loadGameCheck) {
+					log.Debug("game id not found:", data.GameID)
+					message = apiResponseGameIDNotFound
+					returnStatusCode = http.StatusNotFound
+					break
+				}
+
+				selfGameServer.game = &loadGame
+				err = selfGameServer.game.loadGameField()
+				if err != nil {
+					log.Warn(err)
+				}
+				log.Debug("game loaded:", loadGame.ID)
+				message = apiResponseGameLoaded
+				returnStatusCode = http.StatusOK
+				break
+			}
+		default:
+			log.Debug(r.Method," is not supported ")
+			message = apiResponseForbidden
+			returnStatusCode = http.StatusMethodNotAllowed
+		}
+
+		w.WriteHeader(returnStatusCode)
+		returnMessage := &returnJSONMessage{ Message: message,StatusCode:returnStatusCode}
+		fmt.Fprintf(w,returnMessage.toString())
+
 }
 
 /*
