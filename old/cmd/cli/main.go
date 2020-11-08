@@ -6,9 +6,13 @@ import (
 	"github.com/Kaibling/gogam"
 	"github.com/c-bata/go-prompt"
 	"net/http/cookiejar"
-	"net/url"
-	"os"
-	"strings"
+	//"net/url"
+	//"os"
+	"net/http"
+	"bytes"
+	//"strings"
+	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 )
 
 type clientCli struct {
@@ -36,30 +40,63 @@ func completer(d prompt.Document) []prompt.Suggest {
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 }
 
-func (selfclientCli *clientCli) login(username string) {
+func (selfclientCli *clientCli) login(username string) (error) {
+		type requestJSON struct {
+		Username string  `json:"username"`
+	}
 
-	data := []byte(username)
-	fmt.Println(selfclientCli.url + "login")
-	response, err := gogam.PostRequest(selfclientCli.url+"login", data, selfclientCli.jar)
+	stringJSON := requestJSON{Username:username}
+	byteJSON,err := json.Marshal(stringJSON)
+		if err != nil {
+		log.Debug(err.Error())
+	}
+
+	response, err := gogam.PostRequest(selfclientCli.url+"login", byteJSON, selfclientCli.jar)
 	if err != nil {
 		fmt.Println(err)
 	}
-	if response == "OK" {
-		selfclientCli.username = username
-	}
-
+	fmt.Println(response)
+	return err
 }
 
-func (selfclientCli *clientCli) sendCommand(command string) string {
 
-	data := []byte(command)
-	response, err := gogam.PostRequest(selfclientCli.url+"game", data, selfclientCli.jar)
+func (selfclientCli *clientCli) createUser(userName string) error {
+	type requestJSON struct {
+		Username string  `json:"username"`
+	}
+	urlUser := clientObject.url + "user"
+	log.Debug("createUser: PostRequest: trying post request to: ", urlUser)
+
+
+	a := requestJSON {Username:userName}
+	
+	bytedata,_ :=json.Marshal(&a)
+	log.Debug("JSON: ",string(bytedata))
+	req, err := http.NewRequest(http.MethodPut, urlUser, bytes.NewBuffer(bytedata))
 	if err != nil {
-		fmt.Println(err)
+		log.Debug(err)
 	}
-	return response
-}
+	//req.Header.Set("Content-Type", "application/json")
 
+	client := &http.Client{Jar: selfclientCli.jar}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Debug(err)
+		return err
+	}
+	if resp.StatusCode == 201 {
+		return nil
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Debug(err)
+	}
+	resp.Body.Close()
+	log.Debug("response Body:", string(body))
+
+	return err
+}
+/*
 func executor(in string) {
 
 	in = strings.TrimSpace(in)
@@ -76,7 +113,7 @@ func executor(in string) {
 
 	case "user":
 		if command[1] == "new" {
-			clientObject.sendCommand(in)
+			clientObject.createUser(command[2])
 		}
 
 	case "game":
@@ -114,6 +151,7 @@ func executor(in string) {
 	}
 
 }
+*/
 
 var promtPrefix string
 var gameID int
@@ -125,6 +163,9 @@ func livePrefix() (string, bool) {
 }
 
 func main() {
+	log.SetLevel(log.DebugLevel)
+	log.SetReportCaller(true)
+	log.Debug("Logging started")
 
 	//fmt.Println("preload")
 	promtPrefix = ""
@@ -138,15 +179,43 @@ func main() {
 	clientObject.url = "http://localhost:7070/"
 	//fmt.Println("preload finished")
 
+	err = clientObject.login("admin")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = clientObject.createUser("hans")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = clientObject.login("hans")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+
+	//PostRequest("http://localhost:7070/user",clientObject.jar)
+	//type requestJSON struct {
+	//	Username string  `json:"username"`
+	//}
+	//a := requestJSON {Username:"userName"}
+	
+	//bytedata,_ :=json.Marshal(&a)
+	//log.Info("JSON: ",string(bytedata))
+
+	//gogam.PostJSONRequest("http://localhost:7070/user",bytedata)
+
 	//login
-	clientObject.login("admin")
+	//clientObject.login("admin")
 	//create new game
-	clientObject.sendCommand("game new welt1")
+	//clientObject.sendCommand("game new welt1")
+	//clientObject.sendCommand("user welt1")
 	//clientObject.sendCommand("game new welt2")
 	//load new game
 	//clientObject.sendCommand("game load 1")
 	//new character
-	clientObject.sendCommand("char new char1 1")
+	//clientObject.sendCommand("char new char1 1")
 	//clientObject.sendCommand("char new char2 1")
 	//clientObject.sendCommand("char stats 1")
 
