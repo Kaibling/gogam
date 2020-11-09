@@ -12,7 +12,7 @@ type User struct {
 type Character struct {
 	gorm.Model
 	UserID int
-	CharacterName string
+	Name string
 	Class string
 	Abilities []Ability `gorm:"many2many:character_abilities;"`
 }
