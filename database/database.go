@@ -19,3 +19,19 @@ func InitDB() *Gorm.DB {
 	db.AutoMigrate(&model.Ability{})
 	return db
 }
+
+func CreateEntity(model interface{},db *Gorm.DB) error{
+	result := db.Create(model)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func UpdateEntity(model interface{},db *Gorm.DB) error{
+	result := db.Save(model)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}

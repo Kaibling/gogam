@@ -2,6 +2,12 @@ package model
 
 import "github.com/jinzhu/gorm"
 
+type Envelope struct {
+	Status string `json:status`
+	Error string `json:"error,omitempty"`
+	Message interface{} `json:"message,omitempty"`
+}
+
 type User struct {
 	gorm.Model
 	Name      string `gorm:"unique"`

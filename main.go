@@ -14,6 +14,7 @@ func main() {
 	r.Use(gin.Recovery())
 	r.Use(func(c *gin.Context){
 		c.Set("db",db)
+		c.Set("hmacSecret",[]byte("asdassasdsdsdswew"))
 	})
 	 
 	api.ApplyRoutes(r)

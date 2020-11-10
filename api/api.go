@@ -1,14 +1,21 @@
 package api
 
-import ("github.com/gin-gonic/gin"
-		"gogam/api/users"
+import (
+	"gogam/api/abilities"
+	"gogam/api/authentication"
+	"gogam/api/characters"
+	"gogam/api/users"
 
+	"github.com/gin-gonic/gin"
 )
 
 func ApplyRoutes( r *gin.Engine) *gin.Engine {
-	userGroup := r.Group("/api")
+	api := r.Group("/api")
 	{
-		users.ApplyRoutes(userGroup)
+		users.ApplyRoutes(api)
+		characters.ApplyRoutes(api)
+		abilities.ApplyRoutes(api)
+		authentication.ApplyRoutes(api)
 	}
 	return r
 }

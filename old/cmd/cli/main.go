@@ -3,9 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Kaibling/gogam"
+	//"gogam"
 	"github.com/c-bata/go-prompt"
-	"net/http/cookiejar"
 	//"net/url"
 	//"os"
 	"net/http"
@@ -13,10 +12,11 @@ import (
 	//"strings"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
+	"gogam/utility"
 )
 
 type clientCli struct {
-	jar           *cookiejar.Jar
+	//jar           *cookiejar.Jar
 	url           string
 	username      string
 	charactername string
@@ -51,7 +51,7 @@ func (selfclientCli *clientCli) login(username string) (error) {
 		log.Debug(err.Error())
 	}
 
-	response, err := gogam.PostRequest(selfclientCli.url+"login", byteJSON, selfclientCli.jar)
+	response, err := utility.PostRequest(selfclientCli.url+"login", byteJSON)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -78,7 +78,7 @@ func (selfclientCli *clientCli) createUser(userName string) error {
 	}
 	//req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Jar: selfclientCli.jar}
+	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Debug(err)
@@ -171,15 +171,15 @@ func main() {
 	promtPrefix = ""
 	clientObject = new(clientCli)
 
-	jar, err := cookiejar.New(&cookiejar.Options{})
-	if err != nil {
-		fmt.Println(err)
-	}
-	clientObject.jar = jar
+	//jar, err := cookiejar.New(&cookiejar.Options{})
+	//f err != nil {
+	//	fmt.Println(err)
+	//}
+	//clientObject.jar = jar
 	clientObject.url = "http://localhost:7070/"
 	//fmt.Println("preload finished")
 
-	err = clientObject.login("admin")
+	err := clientObject.login("admin")
 	if err != nil {
 		fmt.Println(err)
 	}
